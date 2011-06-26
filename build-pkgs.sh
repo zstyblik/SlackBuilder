@@ -101,10 +101,10 @@ buildprofile() {
 	fi
 	if [ -e "${PROFILE}" ]; then
 		true
-	elif [ -e "${PROFILEDIRS}/${PROFILE}" ]; then
-		PROFILE="${PROFILEDIRS}/${PROFILE}"
-	elif [ -e "${PROFILEDIRS}/${PROFILE}.sh" ]; then
-		PROFILE="${PROFILEDIRS}/${PROFILE}.sh"
+	elif [ -e "${PROFILESDIR}/${PROFILE}" ]; then
+		PROFILE="${PROFILESDIR}/${PROFILE}"
+	elif [ -e "${PROFILESDIR}/${PROFILE}.sh" ]; then
+		PROFILE="${PROFILESDIR}/${PROFILE}.sh"
 	else
 		echo "Profile '${PROFILE}' not found. Error!"
 		return 1
