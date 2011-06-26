@@ -30,7 +30,7 @@ export ARCH
 export LIBDIRSUFFIX
 
 #exec 1 > "${LOGFILE}.out"
-exec 2> "${LOGFILE}.err"
+exec 2>"${LOGFILE}.err"
 
 # build everything
 buildall() {
