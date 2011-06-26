@@ -117,8 +117,8 @@ buildprofile() {
 	fi
 	# HAXX
 	for PKG in $PKGLIST; do
-		CATEGORY=$(printf "%s" "${LINE}" | cut -d '/' -f 1)
-		SBNAME=$(printf "%s" "${LINE}" | cut -d '/' -f 2)
+		CATEGORY=$(printf "%s" "${PKG}" | cut -d '/' -f 1)
+		SBNAME=$(printf "%s" "${PKG}" | cut -d '/' -f 2)
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			# should this be a total fail ?
 			echo "Category or SBname not set."
