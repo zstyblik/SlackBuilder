@@ -115,10 +115,24 @@ buildprofile() {
 		echo "Unable to include '${PROFILE}'."
 		return 1
 	fi
+	PKGLIST=${PKGLIST:-''}
+	DEFAULTVER=${DEFAULTVER:-''}
+	if [ -z "${PKGLIST}" ]; then
+		echo "To build what? PKGLIST empty."
+		return 1
+	fi
 	# HAXX
 	for PKG in $PKGLIST; do
-		CATEGORY=$(printf "%s" "${PKG}" | cut -d '/' -f 1)
-		SBNAME=$(printf "%s" "${PKG}" | cut -d '/' -f 2)
+		CATEGORY=$(printf "%s" "${PKG}" | awk -F',' '{ print $1 }' | \
+			awk -F'/' '{ print $1 }')
+		SBNAME=$(printf "%s" "${PKG}" | awk -F'/' '{ print $2 }' | \
+			awk -F',' '{ print $1 }')
+		VERSION=$(printf "%s" "${PKG}" | awk -F',' '{ print $2 }')
+		if [ -z "${VERSION}" ]; then
+			VERSION=${DEFAULTVER}
+		else
+			unset VERSION
+		fi
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			# should this be a total fail ?
 			echo "Category or SBname not set."
