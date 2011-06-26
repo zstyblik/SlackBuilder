@@ -29,8 +29,8 @@ export SBODIR
 export ARCH
 export LIBDIRSUFFIX
 
-exec 1 | tee "${LOGFILE}.out"
-exec 2 > "${LOGFILE}.err"
+#exec 1 > "${LOGFILE}.out"
+exec 2> "${LOGFILE}.err"
 
 # build everything
 buildall() {
@@ -101,10 +101,10 @@ buildprofile() {
 	fi
 	if [ -e "${PROFILE}" ]; then
 		true
-	elif [ -e "${PROFILEDIR}/${PROFILE}" ]; then
-		PROFILE="${PROFILEDIR}/${PROFILE}"
-	elif [ -e "${PROFILEDIR}/${PROFILE}.sh" ]; then
-		PROFILE="${PROFILEDIR}/${PROFILE}.sh"
+	elif [ -e "${PROFILEDIRS}/${PROFILE}" ]; then
+		PROFILE="${PROFILEDIRS}/${PROFILE}"
+	elif [ -e "${PROFILEDIRS}/${PROFILE}.sh" ]; then
+		PROFILE="${PROFILEDIRS}/${PROFILE}.sh"
 	else
 		echo "Profile '${PROFILE}' not found. Error!"
 		return 1
