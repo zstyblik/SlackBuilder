@@ -129,10 +129,12 @@ buildprofile() {
 			awk -F',' '{ print $1 }')
 		VERSION=$(printf "%s" "${PKG}" | awk -F',' '{ print $2 }')
 		if [ -z "${VERSION}" ]; then
-			VERSION=${DEFAULTVER}
-		else
-			unset VERSION
-		fi
+			if [ ! -z "${DEFAULTVER}" ]; then
+				VERSION=${DEFAULTVER}
+			else
+				unset VERSION
+			fi # if ! -z DEFAULTVER
+		fi # if -z VERSION
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			# should this be a total fail ?
 			echo "Category or SBname not set."
