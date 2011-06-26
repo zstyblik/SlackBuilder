@@ -1,0 +1,23 @@
+ToDo:
+@ create-repo.sh shouldn't run w/o params at all!
+@ MD5 file per pkg
+* external TXT pkg desc
+* watch the proces somehow
+* modify installation menu(s) to support additional categories and added packages
+* tfn configs for things like httpd, web sites, etc.
+* all configs in pkgs must end with .new !
+* re-do httpd to enabled-sites or alike (like in Debian ... oh silicon lord!)
+* solve "deps" by txt file (GBS alike)
+* kernel - after an installation, notify user to update his/her LiLO
+* move versioning to profiles, because it's quite retarded to change trilion
+files eg. due to kernel version change; and i think it also would be cool to
+be able to compile older versions eg. kernel 2.6.32.21 without re-editing
+everything *again* like a chimp. ;;; 
+say: "k/kernel-huge;2.6.32.21;x64_64;" could do?
+* generated filelist output is un-ordered :(
+* loop-AES for -v4l by appending -v4l to Kversion
+* locking in /tmp/.slackbuilder.lock or wherever
+* create an auto conf .$1 -> .$1.new + doinst.sh substr
+X auto arch detection ~ dismissed
+* one could write a crawler that would sweep repo and create filelist/checksums 
+by himself instead of tedious regeneration of these lists
