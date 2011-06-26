@@ -96,38 +96,37 @@ buildpkg() {
 buildprofile() {
 	PROFILE=${1:-''}
 	if [ -z "${PROFILE}" ]; then
-		echo "Profile is unset."
-	fi
-	if [ -d "${PROFILESDIR}/${PROFILE}" ]; then
-		for FILE in $(ls -1 "${PROFILESDIR}/${PROFILE}"); do
-			CATEGORY=$(printf "%s" "${FILE}" | cut -d '/' -f 1)
-			SBNAME=$(printf "%s" "${FILE}" | cut -d '/' -f 2)
-			if [ -z "${CATEGORY}"	] || [ -z "${SBNAME}" ]; then
-				# should this be a total fail ?
-				echo "Category or SBname not set."
-				continue;
-			fi
-			buildpkg "${CATEGORY}" "${SBNAME}"
-		done
-		return 0
-	elif [ -e "${PROFILESDIR}/${PROFILE}" ]; then
-		for LINE in $(cat "${PROFILESDIR}/${PROFILE}" | grep -v -e '#'); do
-			CATEGORY=$(printf "%s" "${LINE}" | cut -d '/' -f 1)
-			SBNAME=$(printf "%s" "${LINE}" | cut -d '/' -f 2)
-			if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
-				# should this be a total fail ?
-				echo "Category or SBname not set."
-				continue;
-			fi
-			buildpkg "${CATEGORY}" "${SBNAME}"
-		done
-		return 0
-	else
-		echo "Profile '${PROFILE}' doesn't seem to exist."
+		echo "buildprofile(): Missing param."
 		return 1
 	fi
-	# 1] check whether profiles/<profile> exists
-	# 2] for each line in $PROFILE which doesn't begin with '#' call $buildpkg
+	if [ -e "${PROFILE}" ]; then
+		true
+	elif [ -e "${PROFILEDIR}/${PROFILE}" ]; then
+		PROFILE="${PROFILEDIR}/${PROFILE}"
+	elif [ -e "${PROFILEDIR}/${PROFILE}.sh" ]; then
+		PROFILE="${PROFILEDIR}/${PROFILE}.sh"
+	else
+		echo "Profile '${PROFILE}' not found. Error!"
+		return 1
+	fi
+	RC=0
+	. "${PROFILE}" || RC=1
+	if [ ${RC} -ne 0 ]; then
+		echo "Unable to include '${PROFILE}'."
+		return 1
+	fi
+	# HAXX
+	for PKG in $PKGLIST; do
+		CATEGORY=$(printf "%s" "${LINE}" | cut -d '/' -f 1)
+		SBNAME=$(printf "%s" "${LINE}" | cut -d '/' -f 2)
+		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
+			# should this be a total fail ?
+			echo "Category or SBname not set."
+			continue
+		fi
+		buildpkg "${CATEGORY}" "${SBNAME}"
+	done
+	return 1
 } # buildprofile
 
 # desc: print help for this script
