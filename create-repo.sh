@@ -86,7 +86,7 @@ while getopts "5dfhip" ARG; do
 			DOFILELIST=1
 			;;
 		h)
-			help
+			show_help
 			exit 1
 			;;
 		i)
@@ -97,10 +97,12 @@ while getopts "5dfhip" ARG; do
 			;;
 		\?)
 			echo "Invalid option - $OPTARG."
+			show_help
 			exit 255
 			;;
 		:)
 			echo "Option $OPTARG requires argument."
+			show_help
 			exit 255
 			;;
 	esac
