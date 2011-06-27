@@ -198,7 +198,7 @@ while getopts "1:adhp:" ARG; do
 				DEPS=true
 				;;
 			h)
-				help
+				show_help
 				exit 0
 				;;
 			p)
@@ -207,14 +207,17 @@ while getopts "1:adhp:" ARG; do
 				;;
 			\?)
 				echo "Invalid option - '${OPTARG}."
+				show_help
 				exit 255
 				;;
 			:)
 				echo "Option '${OPTARG}' requires argument."
+				show_help
 				exit 255
 				;;
 			*)
 				echo "I don't know what to do."
+				show_help
 				exit 1
 				;;
 	esac; # case $ARG
@@ -242,12 +245,12 @@ case "${ACTION}" in
 		;;
 	\?)
 		echo "Invalid action - ${ACTION}"
-		help
+		show_help
 		exit 255
 		;;
 	*)
 		echo "Invalid action - ${ACTION}"
-		help
+		show_help
 		exit 255
 		;;
 esac # case $ACTION
