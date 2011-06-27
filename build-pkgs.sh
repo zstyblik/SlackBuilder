@@ -18,6 +18,7 @@ LOGFILE=/tmp/slack.log
 PREFIXDIR=${PREFIXDIR:-"/mnt/slackrepo/slackware.tfn/"}
 PROFILESDIR=${PROFILESDIR:-"${PREFIXDIR}/profiles/"}
 SBODIR=${SBODIR:-"SlackBuilds"}
+SLACKDISTDIR=${SLACKDISTDIR:-'/mnt/cdrom'}
 SLACKDIR=${SLACKDIR:-"slackware64-13.37"}
 SLACKMIRROR='ftp://ftp.sh.cvut.cz/storage/1/slackware/'
 SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKDIR}/source/"
@@ -61,7 +62,7 @@ buildpkg() {
 	fi
 
 	export SBDIR="${PREFIXDIR}/$SBODIR/$CATEGORY/${SBNAME}"
-	export DISTPKG="${PREFIXDIR}/${SLACKDIR}/source/$CATEGORY/${SBNAME}"
+	export DISTPKG="${SLACKDISTDIR}/${SLACKDIR}/source/$CATEGORY/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		echo "[${SBNAME}] skipped: build.sh -x." >> "${LOGFILE}"
