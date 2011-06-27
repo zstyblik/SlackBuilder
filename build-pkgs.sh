@@ -62,7 +62,7 @@ buildpkg() {
 	fi
 
 	export SBDIR="${PREFIXDIR}/$SBODIR/$CATEGORY/${SBNAME}"
-	export DISTPKG="${SLACKDISTDIR}/${SLACKDIR}/source/$CATEGORY/${SBNAME}"
+	export DISTPKG="${SLACKDISTDIR}/source/${CATEGORY}/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		echo "[${SBNAME}] skipped: build.sh -x." >> "${LOGFILE}"
