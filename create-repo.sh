@@ -16,7 +16,7 @@ SLACKDISTDIR="/mnt/cdrom/"
 SLACKVER="slackware64-13.1"
 TMPDIR=${TMPDIR:-"/mnt/tmp/slackrepo/"}
 SCRIPTNAME="${0}"
-PREFIX="$(basename "${SCRIPTNAME}")"
+PREFIX="$(dirname "${SCRIPTNAME}")"
 
 SLACKSUFFIX=""
 printf "${SLACKVER}" | grep -q -e 'slackware64' && SLACKSUFFIX=64
