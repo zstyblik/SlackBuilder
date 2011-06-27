@@ -110,7 +110,7 @@ done
 
 if [ ${DOPURGE} -eq 0 ] && [ -z ${CPPARAMS} ]; then
 	echo "I don't know what to do."
-	help
+	show_help
 	exit 1
 fi
 
