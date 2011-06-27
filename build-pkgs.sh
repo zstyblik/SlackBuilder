@@ -127,10 +127,10 @@ buildprofile() {
 			awk -F'/' '{ print $1 }')
 		SBNAME=$(printf "%s" "${PKG}" | awk -F'/' '{ print $2 }' | \
 			awk -F',' '{ print $1 }')
-		VERSION=$(printf "%s" "${PKG}" | awk -F',' '{ print $2 }')
+		export VERSION=$(printf "%s" "${PKG}" | awk -F',' '{ print $2 }')
 		if [ -z "${VERSION}" ]; then
 			if [ ! -z "${DEFAULTVER}" ]; then
-				VERSION=${DEFAULTVER}
+				export VERSION=${DEFAULTVER}
 			else
 				unset VERSION
 			fi # if ! -z DEFAULTVER
