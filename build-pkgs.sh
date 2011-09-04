@@ -7,19 +7,6 @@
 set -e
 set -u
 
-ARCH=${ARCH:-"x86_64"}
-CWD=$(pwd)
-LIBDIRSUFFIX=${LIBDIRSUFFIX:-"64"}
-LOGFILE=/tmp/slack.log
-PREFIXDIR=${PREFIXDIR:-"/mnt/slackrepo/slackware.tfn/"}
-PROFILESDIR=${PROFILESDIR:-"${PREFIXDIR}/profiles/"}
-SBODIR=${SBODIR:-"SlackBuilds"}
-SLACKDISTDIR=${SLACKDISTDIR:-'/mnt/cdrom'}
-SLACKDIR=${SLACKDIR:-"slackware64-13.37"}
-SLACKMIRROR='ftp://ftp.sh.cvut.cz/storage/1/slackware/'
-SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKDIR}/source/"
-SVER=$(basename "${SLACKDIR}")
-
 export PREFIXDIR
 export SLACKDIR
 export SBODIR
