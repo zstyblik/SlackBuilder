@@ -4,10 +4,6 @@
 # Desc: build packages out of SlackBuilds and place them into bare repo
 # directory
 #
-# ToDo:
-# ---
-# * a nice to have would be restart from failed PKG, not from the point #1
-#
 set -e
 set -u
 
