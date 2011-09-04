@@ -1,10 +1,6 @@
 #!/bin/bash
 # 2010/07/28 @ Zdenek Styblik
-
-# ToDo:
-# * speed up re-generation, especially MD5-sums
-#	* ISO is going to carry tag files along
-# * an ISO is missing dist pkgs !!!
+# Desc: creates full-feature repository
 #
 set -e
 set -u
