@@ -5,15 +5,6 @@
 set -e
 set -u
 
-PREFIXDIR="/mnt/slackrepo/slackware.tfn/"
-REPOBAREDIR="${PREFIXDIR}/repo-bare/"
-REPODIR="${PREFIXDIR}/repo/"
-SLACKDISTDIR="/mnt/cdrom/"
-SLACKVER="slackware64-13.37"
-TMPDIR=${TMPDIR:-"/mnt/tmp/slackrepo/"}
-SCRIPTNAME="${0}"
-PREFIX="$(dirname "${SCRIPTNAME}")"
-
 SLACKSUFFIX=""
 printf "${SLACKVER}" | grep -q -e 'slackware64' && SLACKSUFFIX=64
 
