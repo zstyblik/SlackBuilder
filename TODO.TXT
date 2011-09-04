@@ -1,6 +1,7 @@
 ToDo:
 @ create-repo.sh shouldn't run w/o params at all!
 @ MD5 file per pkg
+* Dash compliant
 * external TXT pkg desc
 * watch the proces somehow
 * modify installation menu(s) to support additional categories and added packages
@@ -21,3 +22,7 @@ say: "k/kernel-huge;2.6.32.21;x64_64;" could do?
 X auto arch detection ~ dismissed
 * one could write a crawler that would sweep repo and create filelist/checksums 
 by himself instead of tedious regeneration of these lists
+* a nice to have would be restart from failed PKG, not from the point #1
+* speed up re-generation, especially MD5-sums
+* ISO is going to carry tag files along
+* an ISO is missing dist pkgs !!!
