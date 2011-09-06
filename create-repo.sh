@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 2010/07/28 @ Zdenek Styblik
 # Desc: creates full-feature repository
 #
@@ -93,7 +93,7 @@ while getopts "5dfhip" ARG; do
 			exit 255
 			;;
 	esac
-done
+done # while getopts
 
 if [ ${DOPURGE} -eq 0 ] && [ -z ${CPPARAMS} ]; then
 	echo "I don't know what to do."
@@ -105,11 +105,11 @@ DESTDIR="${REPODIR}/${SLACKVER}"
 
 if [ ${DOPURGE} -eq 1 ]; then
 	echo "Wiping out an old repo..."
-	rm -rf "${DESTDIR}";
+	rm -rf "${DESTDIR}"
 fi
 
 if [ ! -d "${DESTDIR}" ]; then
-	mkdir -p "${DESTDIR}";
+	mkdir -p "${DESTDIR}"
 fi
 
 echo "Copying /slackware${SLACKSUFFIX}"
@@ -164,7 +164,7 @@ fi
 if [ ${DOFILELIST} -eq 1 ]; then
 	echo "Generating FILELISTs..."
 	printf "Generating FILELIST.TXT for './'..."
-	if $(format_filelist './'); then
+	if format_filelist './' ; then
 		printf "[ OK ]\n"
 	else 
 		printf "[ FAIL ]\n"
@@ -172,7 +172,7 @@ if [ ${DOFILELIST} -eq 1 ]; then
 
 	pushd "slackware${SLACKSUFFIX}"
 	printf "Generating FILELIST.TXT for 'slackware%s'..." "${SLACKSUFFIX}"
-	if $(format_filelist './'); then
+	if format_filelist './' ; then
 		printf "[ OK ]\n"
 	else 
 		printf "[ FAIL ]\n"
@@ -183,12 +183,12 @@ fi
 if [ ${DOMD5} -eq 1 ]; then
 	pushd "${DESTDIR}"
 	echo "Generating CHECKSUMS..."
-	bash "/${PREFIXDIR}/scripts/generate-checksums.sh" ./ > \
+	${PREFIXDIR}/scripts/generate-checksums.sh ./ > \
 		"${TMPDIR}./${SLACKVER}-CHECKSUMS.md5"
 
 	mv "${TMPDIR}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5
 	cd "slackware${SLACKSUFFIX}"
-	bash "/${PREFIXDIR}/scripts/generate-checksums.sh" ./ > \
+	${PREFIXDIR}/scripts/generate-checksums.sh ./ > \
 		"${TMPDIR}./${SLACKVER}-CHECKSUMS.md5"
 
 	mv "${TMPDIR}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5

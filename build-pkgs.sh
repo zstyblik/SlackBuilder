@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 2010/07- @ Zdenek Styblik
 # 
 # Desc: build packages out of SlackBuilds and place them into bare repo
@@ -22,8 +22,8 @@ buildall() {
 		if [ ! -d "${SBODIR}/${CATEGORY}/" ]; then
 			continue
 		fi
-		if [ ! -d "${PREFIXDIR}/repo-bare/${SVER}/${CATEGORY}/" ]; then
-			mkdir -p "${PREFIXDIR}/repo-bare/${SVER}/${CATEGORY}/";
+		if [ ! -d "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/" ]; then
+			mkdir -p "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/"
 		fi
 		for SBNAME in $(ls -1 "${SBODIR}/${CATEGORY}"); do
 			# move pkg/patch original
@@ -31,10 +31,10 @@ buildall() {
 			# install pkg
 			# move pkg to repo cat/pkg
 			# next, please.
-			buildpkg "${CATEGORY}" "${SBNAME}";
+			buildpkg "${CATEGORY}" "${SBNAME}"
 		done
 	done
-return 0
+	return 0
 } # buildall
 
 buildpkg() {
@@ -55,26 +55,31 @@ buildpkg() {
 	cd "${SBDIR}"
 	./build.sh || { echo "[${SBNAME}] build.sh has exited with RC $?"; \
 	exit 253; }
-	REPODST="${PREFIXDIR}/repo-bare/${SVER}/${CATEGORY}/${SBNAME}/"
+	REPODST="${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}/"
 	# SOMEVAR=repeatingMegaLongStuff could/SHOULD be utilized here!
 	# VERSION could be utilized here
-	if [ ! -d "${PREFIXDIR}/repo-bare/${SVER}/${CATEGORY}/${SBNAME}" ]; then
-		mkdir -p "${PREFIXDIR}/repo-bare/${SVER}/${CATEGORY}/${SBNAME}"
+	if [ ! -d "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}" ]; then
+		mkdir -p "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}"
 	fi
 
-	mv /tmp/${SBNAME}*.txt "${REPODST}" || \
-		{ echo "[${SBNAME}] no external TXT desc found."; true; }
+	if ! mv /tmp/${SBNAME}*.txt "${REPODST}" ; then
+		printf "[%s] no external TXT desc found.\n" ${SBNAME}
+	fi
 
-	mv /tmp/${SBNAME}*.md5 "${REPODST}" || \
-		{ echo "[${SBNAME}] no external MD5 file found."; true; }
+	if ! mv /tmp/${SBNAME}*.md5 "${REPODST}" ; then
+		printf "[%s] no external MD5 file found.\n" ${SBNAME}
+	fi
 
-	mv /tmp/${SBNAME}*.txz "${REPODST}/" || \
-		{ echo "[${SBNAME}] no pkg with alike name found in /tmp/."; exit 253; }
+	if ! mv /tmp/${SBNAME}*.txz "${REPODST}/" ; then
+		printf "[%s] no pkg with alike name found in /tmp/.\n" ${SBNAME}
+		exit 253
+	fi
 
-	cd $PREFIXDIR
+	cd ${PREFIXDIR}
 	unset BUILD
 	unset PKGNAM
 	unset VERSION
+	return 0
 } # buildpkg
 
 buildprofile() {
@@ -90,13 +95,13 @@ buildprofile() {
 	elif [ -e "${PROFILESDIR}/${PROFILE}.sh" ]; then
 		PROFILE="${PROFILESDIR}/${PROFILE}.sh"
 	else
-		echo "Profile '${PROFILE}' not found. Error!"
+		printf "Profile '%s' not found. Error!\n" ${PROFILE}
 		return 1
 	fi
 	RC=0
 	. "${PROFILE}" || RC=1
 	if [ ${RC} -ne 0 ]; then
-		echo "Unable to include '${PROFILE}'."
+		printf "Unable to include '%s'.\n" ${PROFILE}
 		return 1
 	fi
 	PKGLIST=${PKGLIST:-''}
@@ -125,7 +130,7 @@ buildprofile() {
 			continue
 		fi
 		buildpkg "${CATEGORY}" "${SBNAME}"
-	done
+	done # for PKG in PKGLIST
 	return 1
 } # buildprofile
 
@@ -145,7 +150,7 @@ Custom-made repository builder for GNU/Linux Slackware
 
 HELP
 
-	return 0;
+	return 0
 } # show_help
 
 # desc: sync source
@@ -153,7 +158,7 @@ HELP
 syncsrc() {
 	cd "${PREFIXDIR}"
 	if [ ! -d "${SLACKDIR}" ]; then
-		mkdir "${SLACKDIR}";
+		mkdir "${SLACKDIR}"
 	fi
 	cd "${SLACKDIR}"
 	RC=0
@@ -213,7 +218,7 @@ case "${ACTION}" in
 	one)
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			echo "Category or Package is unset."
-			exit 2;
+			exit 2
 		fi
 		buildpkg "${CATEGORY}" "${SBNAME}"
 		;;
@@ -223,7 +228,7 @@ case "${ACTION}" in
 	profile)
 		if [ -z "${PROFILE}" ]; then
 			echo "Profile is unset."
-			exit 2;
+			exit 2
 		fi
 		buildprofile "${PROFILE}"
 		;;
