@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # 2010/07/24 @ Zdenek Styblik
 set -e
 set -u

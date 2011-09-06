@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 cat /dev/null > my.out
 for LINE in $(head -n 50 repo/slackware64-13.1/FILELIST.TXT | \
 	sed 's/ /@/g'); do
