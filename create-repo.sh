@@ -5,10 +5,11 @@
 set -e
 set -u
 
-SLACKSUFFIX=""
-printf "${SLACKVER}" | grep -q -e 'slackware64' && SLACKSUFFIX=64
+PREFIX=$(dirname ${0})
 
-# Helpers
+. "${PREFIX}/include/slackbuilder-conf.sh"
+
+# Help variables
 CPPARAMS=''
 DOMD5=0
 DOFILELIST=0
@@ -30,7 +31,7 @@ make_iso() {
 	fi
 	echo "Creating an ISO image ..."
 	mkisofs -o "../${SLACKVER}-tfn-mod.iso" \
-		-R -J -A "${SLACKVER} TFN" \
+		-R -J -A "${SLACKVER} TFN MOD" \
 		-hide-rr-moved \
 		-v -d -N \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -112,34 +113,34 @@ if [ ! -d "${DESTDIR}" ]; then
 	mkdir -p "${DESTDIR}"
 fi
 
-echo "Copying /slackware${SLACKSUFFIX}"
-cp ${CPPARAMS} -r "${SLACKDISTDIR}/slackware${SLACKSUFFIX}" \
+echo "Copying /slackware${LIBDIRSUFFIX}"
+cp ${CPPARAMS} -r "${SLACK_CD_DIR}/slackware${LIBDIRSUFFIX}" \
 	"${DESTDIR}/"
 # FUCK EXTRA, it's a broken dir! I'm going to deal with you later ... with hammer
 #echo "Copying /extra"
-#cp ${CPPARAMS} -r $SLACKDISTDIR/extra $REPODIR/$SLACKVER/
+#cp ${CPPARAMS} -r $SLACK_CD_DIR/extra $REPODIR/$SLACKVER/
 if [ ! -d "${DESTDIR}/extra" ]; then
 	echo "Creating directory /extra"
 	mkdir "${DESTDIR}/extra" || true
 fi
 
 echo "Copying /isolinux"
-cp ${CPPARAMS} -fur "${SLACKDISTDIR}/isolinux" "${DESTDIR}"
+cp ${CPPARAMS} -fur "${SLACK_CD_DIR}/isolinux" "${DESTDIR}"
 echo "Copying /kernels"
-cp ${CPPARAMS} -fur "${SLACKDISTDIR}/kernels" "${DESTDIR}"
+cp ${CPPARAMS} -fur "${SLACK_CD_DIR}/kernels" "${DESTDIR}"
 echo "Copying /patches"
-cp ${CPPARAMS} -fur "${SLACKDISTDIR}/patches" "${DESTDIR}"
+cp ${CPPARAMS} -fur "${SLACK_CD_DIR}/patches" "${DESTDIR}"
 
 for CATEGORY in $(ls -1 "${REPOBAREDIR}/${SLACKVER}/"); do
-	if [ ! -d "${DESTDIR}/slackware${SLACKSUFFIX}/$CATEGORY/" ]; then
+	if [ ! -d "${DESTDIR}/slackware${LIBDIRSUFFIX}/$CATEGORY/" ]; then
 		echo "Will create category $CATEGORY..."
-		mkdir -p "${DESTDIR}/slackware${SLACKSUFFIX}/$CATEGORY/";
+		mkdir -p "${DESTDIR}/slackware${LIBDIRSUFFIX}/$CATEGORY/";
 	fi
 	for PKG in $(ls "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}"); do
 		# TODO: remove other resp. dist version of pkg!!!
 		echo "Copying $CATEGORY/$PKG..."
 		cp ${CPPARAMS} ${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/${PKG}/* \
-			"${DESTDIR}/slackware${SLACKSUFFIX}/${CATEGORY}/";
+			"${DESTDIR}/slackware${LIBDIRSUFFIX}/${CATEGORY}/";
 	done
 done
 
@@ -156,8 +157,8 @@ pushd "${DESTDIR}"
 date > ChangeLog.txt
 popd
 
-if [ ! -d "${TMPDIR}" ]; then
-	mkdir "${TMPDIR}"
+if [ ! -d "${TMP}" ]; then
+	mkdir "${TMP}"
 fi
 
 # mktemp && etc.
@@ -170,8 +171,8 @@ if [ ${DOFILELIST} -eq 1 ]; then
 		printf "[ FAIL ]\n"
 	fi
 
-	pushd "slackware${SLACKSUFFIX}"
-	printf "Generating FILELIST.TXT for 'slackware%s'..." "${SLACKSUFFIX}"
+	pushd "slackware${LIBDIRSUFFIX}"
+	printf "Generating FILELIST.TXT for 'slackware%s'..." "${LIBDIRSUFFIX}"
 	if format_filelist './' ; then
 		printf "[ OK ]\n"
 	else 
@@ -183,15 +184,15 @@ fi
 if [ ${DOMD5} -eq 1 ]; then
 	pushd "${DESTDIR}"
 	echo "Generating CHECKSUMS..."
-	${PREFIXDIR}/scripts/generate-checksums.sh ./ > \
-		"${TMPDIR}./${SLACKVER}-CHECKSUMS.md5"
+	${PREFIX}/scripts/generate-checksums.sh ./ > \
+		"${TMP}./${SLACKVER}-CHECKSUMS.md5"
 
-	mv "${TMPDIR}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5
-	cd "slackware${SLACKSUFFIX}"
-	${PREFIXDIR}/scripts/generate-checksums.sh ./ > \
-		"${TMPDIR}./${SLACKVER}-CHECKSUMS.md5"
+	mv "${TMP}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5
+	cd "slackware${LIBDIRSUFFIX}"
+	${PREFIX}/scripts/generate-checksums.sh ./ > \
+		"${TMP}./${SLACKVER}-CHECKSUMS.md5"
 
-	mv "${TMPDIR}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5
+	mv "${TMP}./${SLACKVER}-CHECKSUMS.md5" CHECKSUMS.md5
 	popd
 fi
 

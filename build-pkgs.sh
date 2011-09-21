@@ -7,11 +7,16 @@
 set -e
 set -u
 
-export PREFIXDIR
+PREFIX=$(dirname ${0})
+
+. "${PREFIX}/include/slackbuilder-conf.sh"
+
+export PREFIX
 export SLACKDIR
 export SBODIR
 export ARCH
 export LIBDIRSUFFIX
+export TMP
 
 #exec 1 > "${LOGFILE}.out"
 exec 2>"${LOGFILE}.err"
@@ -22,8 +27,8 @@ buildall() {
 		if [ ! -d "${SBODIR}/${CATEGORY}/" ]; then
 			continue
 		fi
-		if [ ! -d "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/" ]; then
-			mkdir -p "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/"
+		if [ ! -d "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/" ]; then
+			mkdir -p "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/"
 		fi
 		for SBNAME in $(ls -1 "${SBODIR}/${CATEGORY}"); do
 			# move pkg/patch original
@@ -44,8 +49,8 @@ buildpkg() {
 		return 1
 	fi
 
-	export SBDIR="${PREFIXDIR}/$SBODIR/$CATEGORY/${SBNAME}"
-	export DISTPKG="${SLACKDISTDIR}/source/${CATEGORY}/${SBNAME}"
+	export SBDIR="$SBODIR/$CATEGORY/${SBNAME}"
+	export DISTPKG="${SLACK_CD_DIR}/source/${CATEGORY}/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		echo "[${SBNAME}] skipped: build.sh -x." >> "${LOGFILE}"
@@ -53,29 +58,30 @@ buildpkg() {
 		continue
 	fi
 	cd "${SBDIR}"
-	./build.sh || { echo "[${SBNAME}] build.sh has exited with RC $?"; \
-	exit 253; }
-	REPODST="${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}/"
-	# SOMEVAR=repeatingMegaLongStuff could/SHOULD be utilized here!
+	if ! ./build.sh ; then
+		echo "[${SBNAME}] build.sh has exited with RC $?"
+		exit 253
+	fi
+	REPODEST="${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
 	# VERSION could be utilized here
-	if [ ! -d "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}" ]; then
-		mkdir -p "${PREFIXDIR}/repo-bare/${SLACKVER}/${CATEGORY}/${SBNAME}"
+	if [ ! -d "${REPODEST}" ]; then
+		mkdir -p "${REPODEST}"
 	fi
 
-	if ! mv /tmp/${SBNAME}*.txt "${REPODST}" ; then
+	if ! mv /tmp/${SBNAME}*.txt "${REPODEST}" ; then
 		printf "[%s] no external TXT desc found.\n" ${SBNAME}
 	fi
 
-	if ! mv /tmp/${SBNAME}*.md5 "${REPODST}" ; then
+	if ! mv /tmp/${SBNAME}*.md5 "${REPODEST}" ; then
 		printf "[%s] no external MD5 file found.\n" ${SBNAME}
 	fi
 
-	if ! mv /tmp/${SBNAME}*.txz "${REPODST}/" ; then
+	if ! mv /tmp/${SBNAME}*.txz "${REPODEST}/" ; then
 		printf "[%s] no pkg with alike name found in /tmp/.\n" ${SBNAME}
 		exit 253
 	fi
 
-	cd ${PREFIXDIR}
+	cd ${PREFIX}
 	unset BUILD
 	unset PKGNAM
 	unset VERSION
@@ -156,12 +162,14 @@ HELP
 # desc: sync source
 # note: wtf was/is purpose of this one? :)
 syncsrc() {
-	cd "${PREFIXDIR}"
-	if [ ! -d "${SLACKDIR}" ]; then
-		mkdir "${SLACKDIR}"
+	XXX=""
+	cd "${PREFIX}"
+	if [ ! -d "${XXX}" ]; then
+		mkdir "${XXX}"
 	fi
-	cd "${SLACKDIR}"
+	cd "${XXX}"
 	RC=0
+	SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKDIR}/source/"
 	/usr/bin/wget -m "${SLACKMIRRORLINK}" -o 'source' || RC=1
 	return ${RC}
 } # syncsrc
@@ -172,8 +180,8 @@ DEPS=false
 while getopts "1:adhp:" ARG; do
 	case "${ARG}" in
 			1)
-				CATEGORY=$(printf "${OPTARG}" | cut -d '/' -f1)
-				SBNAME=$(printf "${OPTARG}" | cut -d '/' -f2)
+				CATEGORY=$(printf "${OPTARG}" | awk -F'/' '{ print $1 }')
+				SBNAME=$(printf "${OPTARG}" | awk -F'/' '{ print $2 }')
 				if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 					echo "Unknown package given."
 					exit 2
