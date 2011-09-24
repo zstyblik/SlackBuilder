@@ -35,7 +35,4 @@ if [ -z $ARCH ]; then
 		ARCH="x86_64"
 	fi
 fi
-
-
-
-
+### EOF ###
