@@ -1,7 +1,7 @@
 ToDo:
 @ create-repo.sh shouldn't run w/o params at all!
 @ MD5 file per pkg
-* Dash compliant
+@ Dash compliant
 * external TXT pkg desc
 * watch the proces somehow
 * modify installation menu(s) to support additional categories and added packages
