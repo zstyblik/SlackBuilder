@@ -134,13 +134,13 @@ cp ${CPPARAMS} -fur "${SLACK_CD_DIR}/patches" "${DESTDIR}"
 for CATEGORY in $(ls -1 "${REPOBAREDIR}/${SLACKVER}/"); do
 	if [ ! -d "${DESTDIR}/slackware${LIBDIRSUFFIX}/$CATEGORY/" ]; then
 		echo "Will create category $CATEGORY..."
-		mkdir -p "${DESTDIR}/slackware${LIBDIRSUFFIX}/$CATEGORY/";
+		mkdir -p "${DESTDIR}/slackware${LIBDIRSUFFIX}/$CATEGORY/"
 	fi
 	for PKG in $(ls "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}"); do
 		# TODO: remove other resp. dist version of pkg!!!
 		echo "Copying $CATEGORY/$PKG..."
 		cp ${CPPARAMS} ${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/${PKG}/* \
-			"${DESTDIR}/slackware${LIBDIRSUFFIX}/${CATEGORY}/";
+			"${DESTDIR}/slackware${LIBDIRSUFFIX}/${CATEGORY}/"
 	done
 done
 
