@@ -7,30 +7,26 @@
 set -e
 set -u
 
-PREFIX=$(dirname ${0})
+PREFIX=$(dirname "${0}")
 
 . "${PREFIX}/include/slackbuilder-conf.sh"
 
 export PREFIX
-export SLACKDIR
-export SBODIR
+export SBO_DIR
 export ARCH
 export LIBDIRSUFFIX
 export TMP
 
-#exec 1 > "${LOGFILE}.out"
-exec 2>"${LOGFILE}.err"
-
 # build everything
 buildall() {
 	for CATEGORY in l d k a db ap n tfn; do
-		if [ ! -d "${SBODIR}/${CATEGORY}/" ]; then
+		if [ ! -d "${SBO_DIR}/${CATEGORY}/" ]; then
 			continue
 		fi
-		if [ ! -d "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/" ]; then
-			mkdir -p "${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/"
+		if [ ! -d "${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/" ]; then
+			mkdir -p "${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/"
 		fi
-		for SBNAME in $(ls -1 "${SBODIR}/${CATEGORY}"); do
+		for SBNAME in $(ls -1 "${SBO_DIR}/${CATEGORY}"); do
 			# move pkg/patch original
 			# build pkg in original dst
 			# install pkg
@@ -49,35 +45,34 @@ buildpkg() {
 		return 1
 	fi
 
-	export SBDIR="$SBODIR/$CATEGORY/${SBNAME}"
+	export SBDIR="$SBO_DIR/$CATEGORY/${SBNAME}"
 	export DISTPKG="${SLACK_CD_DIR}/source/${CATEGORY}/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
-		echo "[${SBNAME}] skipped: build.sh -x." >> "${LOGFILE}"
-		echo "[${SBNAME}] skipped: build.sh -x."
+		printf "[%s] skipped: build.sh -x." "${SBNAME}"
 		continue
 	fi
 	cd "${SBDIR}"
 	if ! ./build.sh ; then
-		echo "[${SBNAME}] build.sh has exited with RC $?"
+		printf "[%s] build.sh has exited with RC %i" "${SBNAME}" $?
 		exit 253
 	fi
-	REPODEST="${REPOBAREDIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
+	REPODEST="${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
 	# VERSION could be utilized here
 	if [ ! -d "${REPODEST}" ]; then
 		mkdir -p "${REPODEST}"
 	fi
 
-	if ! mv /tmp/${SBNAME}*.txt "${REPODEST}" ; then
-		printf "[%s] no external TXT desc found.\n" ${SBNAME}
+	if ! mv ${TMP}/${SBNAME}*.txt "${REPODEST}" ; then
+		printf "[%s] no external TXT desc found.\n" "${SBNAME}"
 	fi
 
-	if ! mv /tmp/${SBNAME}*.md5 "${REPODEST}" ; then
-		printf "[%s] no external MD5 file found.\n" ${SBNAME}
+	if ! mv ${TMP}/${SBNAME}*.md5 "${REPODEST}" ; then
+		printf "[%s] no external MD5 file found.\n" "${SBNAME}"
 	fi
 
-	if ! mv /tmp/${SBNAME}*.txz "${REPODEST}/" ; then
-		printf "[%s] no pkg with alike name found in /tmp/.\n" ${SBNAME}
+	if ! mv ${TMP}/${SBNAME}*.t?z "${REPODEST}/" ; then
+		printf "[%s] no pkg with alike name found in '%s'.\n" "${SBNAME}" "${TMP}"
 		exit 253
 	fi
 
@@ -96,10 +91,10 @@ buildprofile() {
 	fi
 	if [ -e "${PROFILE}" ]; then
 		true
-	elif [ -e "${PROFILESDIR}/${PROFILE}" ]; then
-		PROFILE="${PROFILESDIR}/${PROFILE}"
-	elif [ -e "${PROFILESDIR}/${PROFILE}.sh" ]; then
-		PROFILE="${PROFILESDIR}/${PROFILE}.sh"
+	elif [ -e "${PROFILES_DIR}/${PROFILE}" ]; then
+		PROFILE="${PROFILES_DIR}/${PROFILE}"
+	elif [ -e "${PROFILES_DIR}/${PROFILE}.sh" ]; then
+		PROFILE="${PROFILES_DIR}/${PROFILE}.sh"
 	else
 		printf "Profile '%s' not found. Error!\n" ${PROFILE}
 		return 1
@@ -113,7 +108,7 @@ buildprofile() {
 	PKGLIST=${PKGLIST:-''}
 	DEFAULTVER=${DEFAULTVER:-''}
 	if [ -z "${PKGLIST}" ]; then
-		echo "To build what? PKGLIST empty."
+		echo "To build what? PKGLIST is empty."
 		return 1
 	fi
 	# HAXX
@@ -169,8 +164,8 @@ syncsrc() {
 	fi
 	cd "${XXX}"
 	RC=0
-	SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKDIR}/source/"
-	/usr/bin/wget -m "${SLACKMIRRORLINK}" -o 'source' || RC=1
+	SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKVER}/source/"
+	wget -m "${SLACKMIRRORLINK}" -o 'source' || RC=1
 	return ${RC}
 } # syncsrc
 
@@ -203,7 +198,7 @@ while getopts "1:adhp:" ARG; do
 				PROFILE="${OPTARG}"
 				;;
 			\?)
-				echo "Invalid option - '${OPTARG}."
+				echo "Invalid option - '${OPTARG}'."
 				show_help
 				exit 255
 				;;
@@ -241,17 +236,16 @@ case "${ACTION}" in
 		buildprofile "${PROFILE}"
 		;;
 	\?)
-		echo "Invalid action - ${ACTION}"
+		echo "Invalid action - '${ACTION}'"
 		show_help
 		exit 255
 		;;
 	*)
-		echo "Invalid action - ${ACTION}"
+		echo "Invalid action - '${ACTION}'"
 		show_help
 		exit 255
 		;;
 esac # case $ACTION
 
 echo "Everything done."
-rm -rf "${LOGFILE}"
-
+# EOF
