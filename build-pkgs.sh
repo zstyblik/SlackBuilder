@@ -102,7 +102,7 @@ buildprofile() {
 	RC=0
 	. "${PROFILE}" || RC=1
 	if [ ${RC} -ne 0 ]; then
-		printf "Unable to include '%s'.\n" ${PROFILE}
+		printf "Error while including '%s', RC = %i.\n" ${PROFILE} ${RC}
 		return 1
 	fi
 	PKGLIST=${PKGLIST:-''}
