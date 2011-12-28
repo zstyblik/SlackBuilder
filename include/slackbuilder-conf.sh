@@ -1,37 +1,35 @@
 #!/bin/sh
 # Configuration file for SlackBuilder
 
-# Slackware version to build for
+# Temporary dir - extract sources and build pkgs
+TMP=${TMP:-"/tmp/"}
+# Slackware version we are building for
 SLACKVER=${SLACKVER:-"slackware64-13.37"}
 # /usr/lib directory suffix, None -> 32bit, 64 -> 64bit
 LIBDIRSUFFIX=${LIBDIRSUFFIX:-""}
-# Architecture
+# Architecture - i386, i686, x86_64, ...
 ARCH=${ARCH:-""}
-# Where to log errors during build 
-LOGFILE=/tmp/slackbuilder.log
-# Path to "mounted" Slackware CD/DVD
-SLACK_CD_DIR=${SLACK_CD_DIR:-'/mnt/cdrom'}
+# General SlackBuilder log
+LOG_DIR="${TMP}"
+# Where to get sources - file:, http:, nfs:, ftp:,
+SLACK_MIRROR=${SLACK_CD_DIR:-'file:/mnt/cdrom'}
 # Directory of Repository - bare
-REPOBAREDIR=${REPOBAREDIR:-"${PREFIX}/repo-bare/"}
+REPOSTAGE_DIR=${REPOSTAGE_DIR:-"${PREFIX}/repo-stage/"}
 # Directory of Repository - live
-REPODIR=${REPODIR:-"${PREFIX}/repo/"}
-# Temporary dir - extract sources and build pkgs
-TMP=${TMPDIR:-"/tmp/"}
+REPO_DIR=${REPO_DIR:-"${PREFIX}/repo/"}
 # Directory where building profiles can be found
-PROFILESDIR=${PROFILESDIR:-"${PREFIX}/profiles/"}
+PROFILES_DIR=${PROFILES_DIR:-"${PREFIX}/profiles/"}
 # Directory with SlackBuilds
-SBODIR=${SBODIR:-"${PREFIX}/SlackBuilds/"}
-# Where to download Slackware sources - not used anywhere, I'd say
-SLACKMIRROR='ftp://ftp.sh.cvut.cz/storage/1/slackware/'
+SBO_DIR=${SBO_DIR:-"${PREFIX}/SlackBuilds/"}
 
 
 ### BLOAT ###
-if [ -z $LIBDIRSUFFIX ]; then
-	printf "%s" ${SLACKVER} | grep -q -e 'slackware64' && LIBDIRSUFFIX=64
+if [ -z "${LIBDIRSUFFIX}" ]; then
+	printf "%s" "${SLACKVER}" | grep -q -e 'slackware64' && LIBDIRSUFFIX=64
 fi
-if [ -z $ARCH ]; then
+if [ -z "${ARCH}" ]; then
 	ARCH="i686"
-	if [ $LIBDIRSUFFIX == '64' ]; then
+	if [ "${LIBDIRSUFFIX}" = '64' ]; then
 		ARCH="x86_64"
 	fi
 fi
