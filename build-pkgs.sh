@@ -154,21 +154,6 @@ HELP
 	return 0
 } # show_help
 
-# desc: sync source
-# note: wtf was/is purpose of this one? :)
-syncsrc() {
-	XXX=""
-	cd "${PREFIX}"
-	if [ ! -d "${XXX}" ]; then
-		mkdir "${XXX}"
-	fi
-	cd "${XXX}"
-	RC=0
-	SLACKMIRRORLINK="${SLACKMIRROR}/${SLACKVER}/source/"
-	wget -m "${SLACKMIRRORLINK}" -o 'source' || RC=1
-	return ${RC}
-} # syncsrc
-
 ### MAIN ###
 ACTION=none
 DEPS=false
