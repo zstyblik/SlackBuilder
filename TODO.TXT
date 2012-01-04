@@ -2,6 +2,7 @@ ToDo:
 @ create-repo.sh shouldn't run w/o params at all!
 @ MD5 file per pkg
 @ Dash compliant
+X auto arch detection ~ dismissed
 * external TXT pkg desc
 * watch the proces somehow
 * modify installation menu(s) to support additional categories and added packages
@@ -15,11 +16,10 @@ files eg. due to kernel version change; and i think it also would be cool to
 be able to compile older versions eg. kernel 2.6.32.21 without re-editing
 everything *again* like a chimp. ;;; 
 say: "k/kernel-huge;2.6.32.21;x64_64;" could do?
-* generated filelist output is un-ordered :(
+* generated filelist output is not ordered :(
 * loop-AES for -v4l by appending -v4l to Kversion
 * locking in /tmp/.slackbuilder.lock or wherever
 * create an auto conf .$1 -> .$1.new + doinst.sh substr
-X auto arch detection ~ dismissed
 * one could write a crawler that would sweep repo and create filelist/checksums 
 by himself instead of tedious regeneration of these lists
 * a nice to have would be restart from failed PKG, not from the point #1
