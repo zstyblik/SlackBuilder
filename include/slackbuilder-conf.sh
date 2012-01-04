@@ -12,7 +12,7 @@ ARCH=${ARCH:-""}
 # General SlackBuilder log
 LOG_DIR="${TMP}"
 # Where to get sources - file:, http:, nfs:, ftp:,
-SLACK_MIRROR=${SLACK_CD_DIR:-'file:/mnt/cdrom'}
+SLACK_MIRROR=${SLACK_MIRROR:-'file:/mnt/cdrom'}
 # Directory of Repository - bare
 REPOSTAGE_DIR=${REPOSTAGE_DIR:-"${PREFIX}/repo-stage/"}
 # Directory of Repository - live

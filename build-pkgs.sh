@@ -46,7 +46,7 @@ buildpkg() {
 	fi
 
 	export SBDIR="$SBO_DIR/$CATEGORY/${SBNAME}"
-	export DISTPKG="${SLACK_CD_DIR}/source/${CATEGORY}/${SBNAME}"
+	export DISTPKG="${SLACK_MIRROR}/source/${CATEGORY}/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		printf "[%s] skipped: build.sh -x." "${SBNAME}"
