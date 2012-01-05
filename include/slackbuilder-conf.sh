@@ -13,8 +13,8 @@ ARCH=${ARCH:-""}
 LOG_DIR="${TMP}"
 # Where to get sources - file:, http:, nfs:, ftp:,
 SLACK_MIRROR=${SLACK_MIRROR:-'file:/mnt/cdrom'}
-# Directory of Repository - bare
-REPOSTAGE_DIR=${REPOSTAGE_DIR:-"${PREFIX}/repo-stage/"}
+# Directory of Repository - stage
+REPO_STAGE_DIR=${REPO_STAGE_DIR:-"${PREFIX}/repo-stage/"}
 # Directory of Repository - live
 REPO_DIR=${REPO_DIR:-"${PREFIX}/repo/"}
 # Directory where building profiles can be found
