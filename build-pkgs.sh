@@ -8,6 +8,9 @@ set -e
 set -u
 
 PREFIX=$(dirname "${0}")
+if [ ${PREFIX} = '.' ]; then
+	PREFIX=$(pwd)
+fi
 
 . "${PREFIX}/include/slackbuilder-conf.sh"
 
