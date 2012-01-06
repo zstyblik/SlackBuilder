@@ -52,12 +52,12 @@ buildpkg() {
 	export DISTPKG="${SLACK_MIRROR}/source/${CATEGORY}/${SBNAME}"
 	
 	if [ ! -x "${SBDIR}/build.sh" ]; then
-		printf "[%s] skipped: build.sh -x." "${SBNAME}"
+		printf "[%s] skipped: build.sh -x.\n" "${SBNAME}"
 		continue
 	fi
 	cd "${SBDIR}"
 	if ! ./build.sh ; then
-		printf "[%s] build.sh has exited with RC %i" "${SBNAME}" $?
+		printf "[%s] build.sh has exited with RC %i.\n" "${SBNAME}" $?
 		exit 253
 	fi
 	REPODEST="${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
