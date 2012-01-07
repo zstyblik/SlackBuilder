@@ -66,17 +66,17 @@ buildpkg() {
 		mkdir -p "${REPODEST}"
 	fi
 
+	if ! mv ${TMP}/${SBNAME}*.t?z "${REPODEST}/" ; then
+		printf "[%s] no pkg with alike name found in '%s'.\n" "${SBNAME}" "${TMP}"
+		exit 253
+	fi
+
 	if ! mv ${TMP}/${SBNAME}*.txt "${REPODEST}" ; then
 		printf "[%s] no external TXT desc found.\n" "${SBNAME}"
 	fi
 
 	if ! mv ${TMP}/${SBNAME}*.md5 "${REPODEST}" ; then
 		printf "[%s] no external MD5 file found.\n" "${SBNAME}"
-	fi
-
-	if ! mv ${TMP}/${SBNAME}*.t?z "${REPODEST}/" ; then
-		printf "[%s] no pkg with alike name found in '%s'.\n" "${SBNAME}" "${TMP}"
-		exit 253
 	fi
 
 	cd ${PREFIX}
