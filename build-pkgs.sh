@@ -19,6 +19,7 @@ export SBO_DIR
 export ARCH
 export LIBDIRSUFFIX
 export TMP_PREFIX
+export SLACKVER
 
 # build everything
 buildall() {
@@ -99,42 +100,28 @@ buildprofile() {
 		echo "buildprofile(): Missing param."
 		return 1
 	fi
-	if [ -e "${PROFILE}" ]; then
-		true
-	elif [ -e "${PROFILES_DIR}/${PROFILE}" ]; then
-		PROFILE="${PROFILES_DIR}/${PROFILE}"
-	elif [ -e "${PROFILES_DIR}/${PROFILE}.sh" ]; then
-		PROFILE="${PROFILES_DIR}/${PROFILE}.sh"
-	else
-		printf "Profile '%s' not found. Error!\n" ${PROFILE}
+
+	if [ ! -d "${PROFILE}" ]; then
+		printf "Supplied profile '%s' is not a directory.\n" "${PROFILE}"
 		return 1
 	fi
-	RC=0
-	. "${PROFILE}" || RC=1
-	if [ ${RC} -ne 0 ]; then
-		printf "Error while including '%s', RC = %i.\n" ${PROFILE} ${RC}
-		return 1
-	fi
-	PKGLIST=${PKGLIST:-''}
-	DEFAULTVER=${DEFAULTVER:-''}
-	if [ -z "${PKGLIST}" ]; then
-		echo "To build what? PKGLIST is empty."
-		return 1
-	fi
-	# HAXX
-	for PKG in $PKGLIST; do
+
+	for PFILE in $PROFILE/*; do
+		RC=0
+		. "${PFILE}" || RC=$?
+		if [ ${RC} -eq 1 ]; then
+			printf "Error while including '%s' profile, RC=%i.\n" "${PFILE}" $RC
+			continue
+		fi # if [ ${RC} -eq 1 ]
+		PKG=${PKG:-''}
+		if [ -z "${PKG}" ]; then
+			printf "Package name not set in profile '%s'.\n" "${PFILE}"
+			continue
+		fi
 		CATEGORY=$(printf "%s" "${PKG}" | awk -F',' '{ print $1 }' | \
 			awk -F'/' '{ print $1 }')
 		SBNAME=$(printf "%s" "${PKG}" | awk -F'/' '{ print $2 }' | \
 			awk -F',' '{ print $1 }')
-		export VERSION=$(printf "%s" "${PKG}" | awk -F',' '{ print $2 }')
-		if [ -z "${VERSION}" ]; then
-			if [ ! -z "${DEFAULTVER}" ]; then
-				export VERSION=${DEFAULTVER}
-			else
-				unset VERSION
-			fi # if ! -z DEFAULTVER
-		fi # if -z VERSION
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			# should this be a total fail ?
 			echo "Category or SBname not set."
@@ -142,7 +129,7 @@ buildprofile() {
 		fi
 		buildpkg "${CATEGORY}" "${SBNAME}"
 	done # for PKG in PKGLIST
-	return 1
+	return 0
 } # buildprofile
 
 # desc: print help for this script
