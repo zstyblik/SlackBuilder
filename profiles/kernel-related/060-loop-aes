@@ -1,0 +1,4 @@
+#!/bin/sh
+PKG="k/loop-AES"
+export VERSION=v3.6e
+export KVERSION=3.0.16
