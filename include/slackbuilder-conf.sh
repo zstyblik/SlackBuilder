@@ -1,8 +1,8 @@
 #!/bin/sh
 # Configuration file for SlackBuilder
 
-# Temporary dir - extract sources and build pkgs
-TMP=${TMP:-"/tmp/"}
+# Temporary dir prefix for % mktemp; - extract sources and build pkgs
+TMP_PREFIX=${TMP_PREFIX:-"/tmp/"}
 # Slackware version we are building for
 SLACKVER=${SLACKVER:-"slackware64-13.37"}
 # /usr/lib directory suffix, None -> 32bit, 64 -> 64bit

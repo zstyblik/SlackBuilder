@@ -18,7 +18,7 @@ export PREFIX
 export SBO_DIR
 export ARCH
 export LIBDIRSUFFIX
-export TMP
+export TMP_PREFIX
 
 # build everything
 buildall() {
@@ -54,6 +54,11 @@ buildpkg() {
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		printf "[%s] skipped: build.sh -x.\n" "${SBNAME}"
 		continue
+	fi
+	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
+	if [ -z "${TMP}" ]; then
+		printf "Failed to create temporary directory.\n"
+		return 1
 	fi
 	cd "${SBDIR}"
 	if ! ./build.sh ; then
