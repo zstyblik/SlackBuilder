@@ -10,7 +10,7 @@ LIBDIRSUFFIX=${LIBDIRSUFFIX:-""}
 # Architecture - i386, i686, x86_64, ...
 ARCH=${ARCH:-""}
 # General SlackBuilder log
-LOG_DIR="${TMP}"
+LOG_DIR="${TMP_PREFIX}"
 # Where to get sources - file:, http:, nfs:, ftp:,
 SLACK_MIRROR=${SLACK_MIRROR:-'file:/mnt/cdrom'}
 # Directory of Repository - stage

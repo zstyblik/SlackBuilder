@@ -60,6 +60,7 @@ buildpkg() {
 		printf "Failed to create temporary directory.\n"
 		return 1
 	fi
+	export TMP
 	cd "${SBDIR}"
 	if ! ./build.sh ; then
 		printf "[%s] build.sh has exited with RC %i.\n" "${SBNAME}" $?
@@ -88,6 +89,7 @@ buildpkg() {
 	unset BUILD
 	unset PKGNAM
 	unset VERSION
+	unset TMP
 	return 0
 } # buildpkg
 
