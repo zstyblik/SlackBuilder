@@ -107,6 +107,10 @@ buildprofile() {
 	fi
 
 	for PFILE in $PROFILE/*; do
+		if [ ! -x "${PFILE}" ]; then
+			printf "Skipping '%s', no +x flag set.\n" "${PFILE}"
+			continue
+		fi
 		RC=0
 		. "${PFILE}" || RC=$?
 		if [ ${RC} -eq 1 ]; then
