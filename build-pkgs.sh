@@ -209,6 +209,10 @@ case "${ACTION}" in
 	all)
 		buildall
 		;;
+	help)
+		show_help
+		exit 0
+		;;
 	one)
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			echo "Category or Package is unset."
