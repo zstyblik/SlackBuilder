@@ -206,15 +206,15 @@ done # while getopts
 export DEPS # export dependency checking
 
 case "${ACTION}" in
+	all)
+		buildall
+		;;
 	one)
 		if [ -z "${CATEGORY}" ] || [ -z "${SBNAME}" ]; then
 			echo "Category or Package is unset."
 			exit 2
 		fi
 		buildpkg "${CATEGORY}" "${SBNAME}"
-		;;
-	all)
-		buildall
 		;;
 	profile)
 		if [ -z "${PROFILE}" ]; then
