@@ -174,9 +174,12 @@ repo_delete() {
 	TARGET="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASE}"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
 		# Full-path given ?
-		TARGET=$REPO_PATH
-		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${REPO_PATH}" \
-			"${REPO_DIR}/${SLACKVER}/")
+		TARGET="${PKG_BASEDIR}/${PKG_BASE}"
+		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
+		REPO_DIR_EXT=$(pwd)
+		popd >/dev/null
+		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
+			"${REPO_DIR_EXT}/")
 		if [ -z "${REPO_PATH}" ]; then
 			REPO_PATH="/"
 		fi # if [ ! -z "${REPO_PATH_NEW}" ]; then
@@ -188,7 +191,7 @@ repo_delete() {
 	fi
 	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
 	if [ -z "${TMP}" ]; then
-		printf "Failed to create temporary directory.\n"
+		printf "Failed to create temporary directory.\n" 1>&2
 		return 1
 	fi
 	# move PACKAGE and all associated files to TMP directory
@@ -202,7 +205,7 @@ repo_delete() {
 	# delete PACKAGE from database
 	printf "INFO: delete package from SQLite DB.\n"
 	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASE}' AND \
-		repo_path = '${REPO_PATH}/${PKG_BASE}';"
+		repo_path = '${REPO_PATH}/${PKG_BASE}.${PKG_SUFFIX}';"
 	# remote TMP directory
 	printf "INFO: clean-up.\n"
 	rm -rf "${TMP}"
