@@ -139,7 +139,7 @@ repo_add() {
 	fi
 	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, repo_path, checksum) \
 	VALUES ('${APPL}', '${VERSION}', '${PKG_BASE}', \
-	'${REPO_PATH}/${PKG_BASE}.${PKG_SUFFIX}', 'MD5#${MD5SUM}');"
+	'${REPO_PATH}/${PKG_BASE}${PKG_SUFFIX}', 'MD5#${MD5SUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
 	fi
