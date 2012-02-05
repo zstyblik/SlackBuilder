@@ -216,7 +216,12 @@ sqlite_init() {
 			exit 1
 		fi
 	fi # if [ ! -d "${SQL_DIR}" ]; then
-	sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" ".q" && RC=0
+	if sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" ".q" 2>&1 | \
+		grep -q -e 'Error' ; then
+		RC=1
+	else
+		RC=0
+	fi
 	return ${RC}
 } # sqlite_init()
 
