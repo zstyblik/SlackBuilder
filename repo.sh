@@ -226,7 +226,7 @@ case "${ACTION}" in
 			# TODO - show ADD specific help
 			exit 1
 		fi
-		if [ "${ARG2}"='help' ]; then
+		if [ "${ARG2}" = 'help' ]; then
 			# TODO
 			exit 0
 		fi
