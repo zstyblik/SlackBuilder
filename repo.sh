@@ -208,6 +208,14 @@ sqlite_exists() {
 # Desc: initialize SQLite DB for Slackware Repository
 sqlite_init() {
 	RC=1
+	SQL_DIR=$(dirname "${SQL_DB}")
+	if [ ! -d "${SQL_DIR}" ]; then
+		if ! mkdir -p "${SQL_DIR}" ; then
+			printf "sqlite_init(): Unable to create directory '%s'.\n" \
+				"${SQL_DIR}" 1>&2
+			exit 1
+		fi
+	fi # if [ ! -d "${SQL_DIR}" ]; then
 	sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" ".q" && RC=0
 	return ${RC}
 } # sqlite_init()
