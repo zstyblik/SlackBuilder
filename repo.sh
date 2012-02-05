@@ -142,9 +142,9 @@ repo_add() {
 	fi
 	cp "${PKG_TO_ADD}" "${TARGET_DIR}/"
 	# TODO - remove "original" we've just added into repository
-	if [ ${REMOVE_ORG} -eq 1 ]; then
+	if [ ${RM_ORG_PKG} -eq 1 ]; then
 		rm -f "${PKG_TO_ADD}"
-	fi # if [ ${REMOVE_ORG} -eq 1 ]
+	fi # if [ ${RM_ORG_PKG} -eq 1 ]
 	#
 	return 0
 } # repo_add()
@@ -238,6 +238,9 @@ sqlite_init() {
 
 ### MAIN
 ACTION=${1:-''}
+# Remove original of package we are adding
+RM_ORG_PKG='0'
+
 
 case "${ACTION}" in
 	'add')
