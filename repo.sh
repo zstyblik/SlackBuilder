@@ -205,7 +205,7 @@ repo_delete() {
 	# delete PACKAGE from database
 	printf "INFO: delete package from SQLite DB.\n"
 	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASE}' AND \
-		repo_path = '${REPO_PATH}/${PKG_BASE}.${PKG_SUFFIX}';"
+		repo_path = '${REPO_PATH}/${PKG_BASE}${PKG_SUFFIX}';"
 	# remote TMP directory
 	printf "INFO: clean-up.\n"
 	rm -rf "${TMP}"
