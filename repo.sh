@@ -95,9 +95,11 @@ repo_add() {
 			printf "repo_add(): Initialized SQLite DB '%s'.\n" "${SQL_DB}"
 		fi
 	fi
-	PKG_SUFFIX=$(get_pkg_suffix "${PKG_TO_ADD}")
-	PKG_PART=$(basename "${PKG_TO_ADD}" "${PKG_SUFFIX}")
-	PKG_NAME=$(basename "${PKG_TO_ADD}")
+	#
+	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
+	PKG_BASE=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
+	PKG_BASEDIR=$(dirname "${REPO_PATH}")
+	#
 	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${REPO_PATH}/"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
 		# Full-path given ?
@@ -113,27 +115,28 @@ repo_add() {
 	APPL=''
 	VERSION=''
 	MD5SUM=''
-	if [ -e "${PKG_PART}.pkgdesc" ]; then
-		APPL=$(grep -e '^APPL: ' "${PKG_PART}.pkgdesc" | cut -d ':' -f '2-')
-		VERSION=$(grep -e '^VERSION: ' "${PKG_PART}.pkgdesc" | cut -d ':' -f '2-')
-		MD5SUM=$(grep -e '^MD5SUM: ' "${PKG_PART}.pkgdesc" | cut -d ':' -f '2-')
+	if [ -e "${PKG_BASE}.pkgdesc" ]; then
+		APPL=$(grep -e '^APPL: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
+		VERSION=$(grep -e '^VERSION: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
+		MD5SUM=$(grep -e '^MD5SUM: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
 	else
 		# TODO: unless instructed to create .pkgdesc, do "nothing" and assume it is
 		# a regular file
-		APPL=''
-		VERSION=''
+		APPL='unknown'
+		VERSION='unknown'
 		MD5SUM=$(md5sum "${PKG_TO_ADD}" | cut -d ' ' -f 1)
-	fi # if [ -e "${PKG_PART}.pkgdesc" ]; then
+	fi # if [ -e "${PKG_BASE}.pkgdesc" ]; then
 	# This should be either 0 or 1
-	CONFL_COUNT=$(sqlite3 "${SQL_DB}" -line "SELECT COUNT(appl) FROM repo WHERE \
-		appl = '${APPL}' AND path =	'${REPO_PATH}';")
-	if [ "${CONFL_COUNT}" != 0 ] || \
-		[ -e "${TARGET_DIR}/${PKG_NAME}" ]; then
+	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
+		appl = '${APPL}' AND repo_path =	'${REPO_PATH}';")
+	if [ "${CONFL_COUNT}" != "0" ] || \
+		[ -e "${TARGET_DIR}/${PKG_BASE}.${PKG_SUFFIX}" ]; then
 		# TODO - remove previous versions of package and so on
 		printf "Not Implemented\n"
 	fi
-	sqlite "${SQL_DB}" "INSERT INTO repo (appl, version, name, repo_path, checksum) \
-	VALUES ('${APPL}', '${VERSION}', '${PKG_NAME}', '${REPO_PATH}', '${MD5SUM}');"
+	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, repo_path, checksum) \
+	VALUES ('${APPL}', '${VERSION}', '${PKG_BASE}', \
+	'${REPO_PATH}/${PKG_BASE}.${PKG_SUFFIX}', 'MD5#${MD5SUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
 	fi
@@ -168,7 +171,12 @@ repo_delete() {
 	TARGET="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASE}"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
 		# Full-path given ?
-		TARGET="${PKG_BASEDIR}/${PKG_BASE}"
+		TARGET=$REPO_PATH
+		REPO_PATH=$(awk "${PREFIX}/include/ComparePaths.awk" "${REPO_PATH}" \
+			"${REPO_DIR}/${SLACKVER}/")
+		if [ -z "${REPO_PATH}" ]; then
+			REPO_PATH="/"
+		fi # if [ ! -z "${REPO_PATH_NEW}" ]; then
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
 	if [ -e "${TARGET}.${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
@@ -190,7 +198,8 @@ repo_delete() {
 	done
 	# delete PACKAGE from database
 	printf "INFO: delete package from SQLite DB.\n"
-	sqlite "${SQL_DB}" -line "DELETE FROM repo WHERE name = '${PKG_BASE}';"
+	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASE}' AND \
+		repo_path = '${REPO_PATH}/${PKG_BASE}';"
 	# remote TMP directory
 	printf "INFO: clean-up.\n"
 	rm -rf "${TMP}"
@@ -216,7 +225,7 @@ sqlite_init() {
 			exit 1
 		fi
 	fi # if [ ! -d "${SQL_DIR}" ]; then
-	if sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" ".q" 2>&1 | \
+	if sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" '.q' 2>&1 | \
 		grep -q -e 'Error' ; then
 		RC=1
 	else
