@@ -96,9 +96,9 @@ repo_add() {
 		fi
 	fi
 	#
-	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
-	PKG_BASE=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
-	PKG_BASEDIR=$(dirname "${REPO_PATH}")
+	PKG_SUFFIX=$(get_pkg_suffix "${PKG_TO_ADD}")
+	PKG_BASE=$(basename "${PKG_TO_ADD}" "${PKG_SUFFIX}")
+	PKG_BASEDIR=$(dirname "${PKG_TO_ADD}")
 	#
 	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${REPO_PATH}/"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
@@ -115,10 +115,13 @@ repo_add() {
 	APPL=''
 	VERSION=''
 	MD5SUM=''
-	if [ -e "${PKG_BASE}.pkgdesc" ]; then
-		APPL=$(grep -e '^APPL: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
-		VERSION=$(grep -e '^VERSION: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
-		MD5SUM=$(grep -e '^MD5SUM: ' "${PKG_BASE}.pkgdesc" | cut -d ':' -f '2-')
+	if [ -e "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" ]; then
+		APPL=$(grep -e '^APPL: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			cut -d ':' -f '2-')
+		VERSION=$(grep -e '^VERSION: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			cut -d ':' -f '2-')
+		MD5SUM=$(grep -e '^MD5SUM: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			cut -d ':' -f '2-')
 	else
 		# TODO: unless instructed to create .pkgdesc, do "nothing" and assume it is
 		# a regular file
