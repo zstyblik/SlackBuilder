@@ -47,7 +47,7 @@ fi
 
 . "${PREFIX}/include/slackbuilder-conf.sh"
 
-SQL_DB=$(printf "%s/%s.sq3" "${REPO_DIR}" "${SLACKVER}")
+SQL_DB=$(printf "%s/%s/%s.sq3" "${REPO_DIR}" "${SLACKVER}" "${SLACKVER}")
 SQL_REPO_TMPL="${PREFIX}/include/repo.sql"
 
 get_pkg_suffix() {
@@ -80,7 +80,7 @@ repo_add() {
 	PKG_TO_ADD=${1:-''} # Path to package to be added
 	REPO_PATH=${2:-''} # Category+series
 	if [ -z "${PKG_TO_ADD}" ] || [ -z "${REPO_PATH}" ]; then
-		printf "repo_add(): Either PACKAGE or REPO_PATH is empty." 1>&2
+		printf "repo_add(): Either PACKAGE or REPO_PATH is empty.\n" 1>&2
 		return 1
 	fi
 	if [ ! -e "${PKG_TO_ADD}" ]; then
@@ -89,10 +89,10 @@ repo_add() {
 	fi
 	if ! sqlite_exists ; then
 		if ! sqlite_init ; then
-			printf "repo_add(): Failed to init SQLite DB '%s'." "${SQL_DB}" 1>&2
+			printf "repo_add(): Failed to init SQLite DB '%s'.\n" "${SQL_DB}" 1>&2
 			return 1
 		else
-			printf "repo_add(): Initialized SQLite DB '%s'." "${SQL_DB}"
+			printf "repo_add(): Initialized SQLite DB '%s'.\n" "${SQL_DB}"
 		fi
 	fi
 	PKG_SUFFIX=$(get_pkg_suffix "${PKG_TO_ADD}")
@@ -103,6 +103,13 @@ repo_add() {
 		# Full-path given ?
 		TARGET_DIR=$REPO_PATH
 	fi # if printf "%s" "${REPO_PATH}" ,,,
+	if [ ! -d "${TARGET_DIR}" ]; then
+		if ! mkdir -p "${TARGET_DIR}"; then
+			printf "repo_add(): Unable to create directory '%s'.\n" \
+				"${TARGET_DIR}" 1>&2
+			exit 1
+		fi
+	fi # if [ ! -d "${TARGET_DIR}" ]; then
 	APPL=''
 	VERSION=''
 	MD5SUM=''
@@ -116,7 +123,7 @@ repo_add() {
 		APPL=''
 		VERSION=''
 		MD5SUM=$(md5sum "${PKG_TO_ADD}" | cut -d ' ' -f 1)
-	fi
+	fi # if [ -e "${PKG_PART}.pkgdesc" ]; then
 	# This should be either 0 or 1
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" -line "SELECT COUNT(appl) FROM repo WHERE \
 		appl = '${APPL}' AND path =	'${REPO_PATH}';")
@@ -219,14 +226,23 @@ case "${ACTION}" in
 			# TODO - show ADD specific help
 			exit 1
 		fi
+		if [ "${ARG2}"='help' ]; then
+			# TODO
+			exit 0
+		fi
 		repo_add "${ARG2}" "${ARG3}"
 		;;
 	'delete')
 		ARG2=${2:-''}
+		ARG3=${3:-''}
 		if [ -z "${ARG2}" ]; then
 			printf "Missing an argument.\n" 1>&2
 			# TODO - show DELETE specific help
 			exit 1
+		fi
+		if [ ! -z "${ARG3}" ]; then
+			# TODO
+			exit 0
 		fi
 		repo_delete "${ARG2}"
 		;;
