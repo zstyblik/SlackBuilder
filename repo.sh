@@ -171,10 +171,10 @@ repo_delete() {
 	PKG_BASE=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
 	PKG_BASEDIR=$(dirname "${REPO_PATH}")
 	#
-	TARGET="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASE}"
+	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASE}"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
 		# Full-path given ?
-		TARGET="${PKG_BASEDIR}/${PKG_BASE}"
+		TARGET_DIR="${PKG_BASEDIR}/${PKG_BASE}"
 		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
 		REPO_DIR_EXT=$(pwd)
 		popd >/dev/null
@@ -184,9 +184,9 @@ repo_delete() {
 			REPO_PATH="/"
 		fi # if [ ! -z "${REPO_PATH_NEW}" ]; then
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
-	if [ -e "${TARGET}.${PKG_SUFFIX}" ]; then
+	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
-			"${TARGET}.${PKG_SUFFIX}" 1>&2
+			"${TARGET_DIR}.${PKG_SUFFIX}" 1>&2
 		return 1
 	fi
 	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
@@ -196,7 +196,7 @@ repo_delete() {
 	fi
 	# move PACKAGE and all associated files to TMP directory
 	for SUFFIX in tgz txz txt asc md5; do
-		if [ ! -e "${TARGET}.${SUFFIX}" ]; then
+		if [ ! -e "${TARGET_DIR}.${SUFFIX}" ]; then
 			continue
 		fi
 		printf "INFO: move '%s' to '%s'.\n" "${TARGET_DIR}.${SUFFIX}" "${TMP}"
