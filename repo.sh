@@ -116,12 +116,12 @@ repo_add() {
 	VERSION=''
 	MD5SUM=''
 	if [ -e "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" ]; then
-		APPL=$(grep -e '^APPL: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
-			cut -d ':' -f '2-')
-		VERSION=$(grep -e '^VERSION: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
-			cut -d ':' -f '2-')
-		MD5SUM=$(grep -e '^MD5SUM: ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
-			cut -d ':' -f '2-')
+		APPL=$(grep -e '^APPL ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			awk -F ' ' '{ print $2 }')
+		VERSION=$(grep -e '^VERSION ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			awk -F ' ' '{ print $2 }')
+		MD5SUM=$(grep -e '^MD5SUM ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+			awk -F ' ' '{ print $2 }')
 	else
 		# TODO: unless instructed to create .pkgdesc, do "nothing" and assume it is
 		# a regular file
@@ -131,7 +131,7 @@ repo_add() {
 	fi # if [ -e "${PKG_BASE}.pkgdesc" ]; then
 	# This should be either 0 or 1
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
-		appl = '${APPL}' AND repo_path =	'${REPO_PATH}';")
+		appl = '${APPL}' AND version = '${VERSION}' AND repo_path =	'${REPO_PATH}';")
 	if [ "${CONFL_COUNT}" != "0" ] || \
 		[ -e "${TARGET_DIR}/${PKG_BASE}.${PKG_SUFFIX}" ]; then
 		# TODO - remove previous versions of package and so on
@@ -175,7 +175,7 @@ repo_delete() {
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
 		# Full-path given ?
 		TARGET=$REPO_PATH
-		REPO_PATH=$(awk "${PREFIX}/include/ComparePaths.awk" "${REPO_PATH}" \
+		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${REPO_PATH}" \
 			"${REPO_DIR}/${SLACKVER}/")
 		if [ -z "${REPO_PATH}" ]; then
 			REPO_PATH="/"
