@@ -15,14 +15,14 @@ BEGIN {
 	path2=ARGV[2];
 	len1=length(path1);
 	len2=length(path2);
-	printf("%i:%i\n", len1, len2);
+#	printf("%i:%i\n", len1, len2);
 	if (len1 < len2) {
 		pathTmp=path1;
 		path1=path2;
 		path2=pathTmp;
 	}
-	printf("p1:%s\n", path1);
-	printf("p2:%s\n", path2);
+#	printf("p1:%s\n", path1);
+#	printf("p2:%s\n", path2);
 	while (path1 != "") {
 		index1=index(path1, "/");
 		if (index1 == 0) {
@@ -34,13 +34,13 @@ BEGIN {
 		}
 		chunk1=substr(path1, 0, index1-1);
 		chunk2=substr(path2, 0, index2-1);
-		printf("c1:c2:%s:%s\n", chunk1, chunk2);
+#		printf("c1:c2:%s:%s\n", chunk1, chunk2);
 		if (chunk1 != chunk2) {
 			break;
 		}
 		path1=substr(path1, index1+1);
 		path2=substr(path2, index2+1);
-		printf("path1:%s\n", path1);
+#		printf("path1:%s\n", path1);
 	}
 	printf("%s\n", path1);
 }
