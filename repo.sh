@@ -170,7 +170,7 @@ repo_add() {
 	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 		repo_path, checksum) \
 	VALUES ('${APPL}', '${VERSION}', '${PKG_BASENAME}', '${PKG_SUFFIX}', \
-	'${INREPO_PATH}', 'MD5#${MD5SUM}');"
+	'${SQL_REPO_PATH}', 'MD5#${MD5SUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
 	fi
@@ -221,6 +221,14 @@ repo_delete() {
 			"${TARGET_DIR}.${PKG_SUFFIX}" 1>&2
 		return 1
 	fi
+	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
+		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
+	PKGFOUND_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
+		repo_path = '${SQL_REPO_PATH}';")
+	if [ "${PKGFOUND_COUNT}" != "0" ] && [ $FORCE -eq 0 ]; then
+		printf "repo_delete(): Package not found in DB.\n" 1>&2
+		return 1
+	fi
 	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
 	if [ -z "${TMP}" ]; then
 		printf "repo_delete(): Failed to create temporary directory.\n" 1>&2
@@ -235,8 +243,6 @@ repo_delete() {
 		mv "${TARGET_DIR}.${SUFFIX}" "${TMP}/"
 	done
 	# delete PACKAGE from database
-	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
-		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	printf "INFO: delete package from SQLite DB.\n"
 	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASENAME}' AND \
 		repo_path = '${SQL_REPO_PATH}';"
@@ -277,8 +283,9 @@ sqlite_init() {
 
 ### MAIN
 ACTION=${1:-''}
+FORCE=0
 # Remove original of package we are adding
-RM_ORG_PKG='0'
+RM_ORG_PKG=0
 # Note: check whether SQLite DB exists; if not, create it
 if ! sqlite_exists ; then
 	if ! sqlite_init ; then
