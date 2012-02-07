@@ -71,10 +71,10 @@ get_pkg_suffix() {
 	fi
 	# No, % basename; won't allow '.t?z' as a suffix
 	PKG_SUFFIX=''
-	if printf "%s" "${ARG1}" | grep -e '.tgz$' ; then
+	if printf "%s" "${ARG1}" | grep -q -e '.tgz$' ; then
 		PKG_SUFFIX='.tgz'
 	fi
-	if printf "%s" "${ARG1}" | grep -e '.txz$' ; then
+	if printf "%s" "${ARG1}" | grep -q -e '.txz$' ; then
 		PKG_SUFFIX='.txz'
 	fi
 	printf "%s" "${PKG_SUFFIX}"
