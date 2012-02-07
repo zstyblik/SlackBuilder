@@ -23,6 +23,16 @@
 # like.
 #
 # ---
+# .pkgdesc format is KEY_whitespace_VALUE:
+# ~~~
+# APPL wine
+# VERSION 1.3.37
+# MD5SUM 5483e192e6fbdc95c8eaf9ed46d61e70
+# ~~~
+# These keys are used so far, because the rest can be obtained from command
+# line.
+#
+# ---
 # On package signing:
 # 
 # http://allanmcrae.com/2011/12/pacman-package-signing-4-arch-linux/
@@ -50,6 +60,9 @@ fi
 SQL_DB=$(printf "%s/%s/%s.sq3" "${REPO_DIR}" "${SLACKVER}" "${SLACKVER}")
 SQL_REPO_TMPL="${PREFIX}/include/repo.sql"
 
+# Desc: determine file's suffix resp. pkg's suffix.
+# @ARG1: file to examine
+# $returns: .tgz, .txz or an empty string
 get_pkg_suffix() {
 	ARG1=${1:-''}
 	if [ -z "${ARG1}" ]; then
@@ -57,54 +70,61 @@ get_pkg_suffix() {
 		return 1
 	fi
 	# No, % basename; won't allow '.t?z' as a suffix
-	PKG_SUFFIX='.txz'
+	PKG_SUFFIX=''
 	if printf "%s" "${ARG1}" | grep -e '.tgz$' ; then
 		PKG_SUFFIX='.tgz'
+	fi
+	if printf "%s" "${ARG1}" | grep -e '.txz$' ; then
+		PKG_SUFFIX='.txz'
 	fi
 	printf "%s" "${PKG_SUFFIX}"
 	return 0
 } # get_pkg_suffix()
-
+# Desc: print help text.
 print_help() {
 	printf "HELP, write me!\n"
 	return 0
 } # print_help
 
-# Desc: add package into repository
-# check whether package is already int SQLite DB; if it is
-#  * delete old pkg from db, move it to /TMP as $(mktemp)
+# Desc: add FILE into repository
+# check whether FILE is already in SQLite DB; if it is
+#  * delete old FILE from db, move it to /TMP as $(mktemp)
 #  * if instructed, try to clean previous versions as well
-#  * insert new pkg, move new pkg into repo
-#  * clean-up - delete old packages
+#  * insert new FILE into DB, move new FILE into repo
+#  * clean-up - delete old FILES in /TMP
+# @FILE_TO_ADD: path to FILE to be added
+# @INREPO_PATH: where to put FILE in repo structure eg. 'slackware64/xap/'
 repo_add() {
-	PKG_TO_ADD=${1:-''} # Path to package to be added
-	REPO_PATH=${2:-''} # Category+series
-	if [ -z "${PKG_TO_ADD}" ] || [ -z "${REPO_PATH}" ]; then
-		printf "repo_add(): Either PACKAGE or REPO_PATH is empty.\n" 1>&2
+	FILE_TO_ADD=${1:-''}
+	INREPO_PATH=${2:-''}
+	if [ -z "${FILE_TO_ADD}" ] || [ -z "${INREPO_PATH}" ]; then
+		printf "repo_add(): Either PACKAGE or INREPO_PATH is empty.\n" 1>&2
 		return 1
 	fi
-	if [ ! -e "${PKG_TO_ADD}" ]; then
-		printf "repo_add(): File '%s' doesn't exist.\n" "${PKG_TO_ADD}" 1>&2
+	if [ ! -e "${FILE_TO_ADD}" ]; then
+		printf "repo_add(): File '%s' doesn't exist.\n" "${FILE_TO_ADD}" 1>&2
 		return 1
 	fi
-	if ! sqlite_exists ; then
-		if ! sqlite_init ; then
-			printf "repo_add(): Failed to init SQLite DB '%s'.\n" "${SQL_DB}" 1>&2
-			return 1
-		else
-			printf "repo_add(): Initialized SQLite DB '%s'.\n" "${SQL_DB}"
-		fi
-	fi
 	#
-	PKG_SUFFIX=$(get_pkg_suffix "${PKG_TO_ADD}")
-	PKG_BASE=$(basename "${PKG_TO_ADD}" "${PKG_SUFFIX}")
-	PKG_BASEDIR=$(dirname "${PKG_TO_ADD}")
+	PKG_SUFFIX=$(get_pkg_suffix "${FILE_TO_ADD}")
+	PKG_BASENAME=$(basename "${FILE_TO_ADD}" "${PKG_SUFFIX}")
+	PKG_BASEDIR=$(dirname "${FILE_TO_ADD}")
 	#
-	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${REPO_PATH}/"
-	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
-		# Full-path given ?
-		TARGET_DIR=$REPO_PATH
-	fi # if printf "%s" "${REPO_PATH}" ,,,
+	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${INREPO_PATH}/"
+	if printf "%s" "${INREPO_PATH}" | grep -q -e '^/' ; then
+		# Full-path given? Whatever you say, captain.
+		TARGET_DIR=$INREPO_PATH
+		#
+		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
+		REPO_DIR_EXT=$(pwd)
+		popd >/dev/null
+		#
+		INREPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
+			"${REPO_DIR_EXT}/")
+		if [ -z "${INREPO_PATH}" ]; then
+			INREPO_PATH="/"
+		fi # if [ ! -z "${INREPO_PATH}" ]; then
+	fi # if printf "%s" "${INREPO_PATH}" ,,,
 	if [ ! -d "${TARGET_DIR}" ]; then
 		if ! mkdir -p "${TARGET_DIR}"; then
 			printf "repo_add(): Unable to create directory '%s'.\n" \
@@ -112,41 +132,53 @@ repo_add() {
 			exit 1
 		fi
 	fi # if [ ! -d "${TARGET_DIR}" ]; then
+	#
 	APPL=''
 	VERSION=''
 	MD5SUM=''
-	if [ -e "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" ]; then
-		APPL=$(grep -e '^APPL ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+	if [ -e "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" ]; then
+		APPL=$(grep -e '^APPL ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
-		VERSION=$(grep -e '^VERSION ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+		VERSION=$(grep -e '^VERSION ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
-		MD5SUM=$(grep -e '^MD5SUM ' "${PKG_BASEDIR}/${PKG_BASE}.pkgdesc" | \
+		MD5SUM=$(grep -e '^MD5SUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
+		#
+		MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+		if [ "${MD5SUM}" != "${MD5SUM_EXT}" ]; then
+			printf "ERRO: MD5 sums do not match.\n" 1>&2
+			exit 1
+		fi # if [ "${MD5SUM}" != "${MD5SUM_EXT}" ]; then
 	else
-		# TODO: unless instructed to create .pkgdesc, do "nothing" and assume it is
-		# a regular file
-		APPL='unknown'
+		# Note: perhaps we want to add eg. README file or such
+		printf "WARN: File '%s' doesn't exist.\n" \
+			"${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" 1>&2
+		APPL=$PKG_BASENAME
 		VERSION='unknown'
-		MD5SUM=$(md5sum "${PKG_TO_ADD}" | cut -d ' ' -f 1)
-	fi # if [ -e "${PKG_BASE}.pkgdesc" ]; then
+		MD5SUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+	fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
+	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}" \
+		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	# This should be either 0 or 1
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
-		appl = '${APPL}' AND version = '${VERSION}' AND repo_path =	'${REPO_PATH}';")
+		appl = '${APPL}' AND repo_path =	'${SQL_REPO_PATH}';")
 	if [ "${CONFL_COUNT}" != "0" ] || \
-		[ -e "${TARGET_DIR}/${PKG_BASE}.${PKG_SUFFIX}" ]; then
+		[ -e "${TARGET_DIR}/${PKG_BASENAME}.${PKG_SUFFIX}" ]; then
 		# TODO - remove previous versions of package and so on
 		printf "Not Implemented\n"
 	fi
-	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, repo_path, checksum) \
-	VALUES ('${APPL}', '${VERSION}', '${PKG_BASE}', \
-	'${REPO_PATH}/${PKG_BASE}${PKG_SUFFIX}', 'MD5#${MD5SUM}');"
+	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
+		repo_path, checksum) \
+	VALUES ('${APPL}', '${VERSION}', '${PKG_BASENAME}', '${PKG_SUFFIX}', \
+	'${INREPO_PATH}', 'MD5#${MD5SUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
 	fi
-	cp "${PKG_TO_ADD}" "${TARGET_DIR}/"
-	# TODO - remove "original" we've just added into repository
+	cp "${FILE_TO_ADD}" "${TARGET_DIR}/"
+	# Note: remove "original" we've just added into repository
 	if [ ${RM_ORG_PKG} -eq 1 ]; then
-		rm -f "${PKG_TO_ADD}"
+		printf "INFO: removing '%s'.\n" "${FILE_TO_ADD}"
+		rm -f "${FILE_TO_ADD}"
 	fi # if [ ${RM_ORG_PKG} -eq 1 ]
 	#
 	return 0
@@ -168,13 +200,13 @@ repo_delete() {
 	fi # if [ -z "${REPO_PATH}" ]
 	#
 	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
-	PKG_BASE=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
+	PKG_BASENAME=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
 	PKG_BASEDIR=$(dirname "${REPO_PATH}")
 	#
-	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASE}"
+	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASENAME}"
 	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
-		# Full-path given ?
-		TARGET_DIR="${PKG_BASEDIR}/${PKG_BASE}"
+		# Full-path given
+		TARGET_DIR="${PKG_BASEDIR}/${PKG_BASENAME}"
 		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
 		REPO_DIR_EXT=$(pwd)
 		popd >/dev/null
@@ -182,7 +214,7 @@ repo_delete() {
 			"${REPO_DIR_EXT}/")
 		if [ -z "${REPO_PATH}" ]; then
 			REPO_PATH="/"
-		fi # if [ ! -z "${REPO_PATH_NEW}" ]; then
+		fi # if [ ! -z "${REPO_PATH}" ]; then
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
 	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
@@ -191,7 +223,7 @@ repo_delete() {
 	fi
 	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
 	if [ -z "${TMP}" ]; then
-		printf "Failed to create temporary directory.\n" 1>&2
+		printf "repo_delete(): Failed to create temporary directory.\n" 1>&2
 		return 1
 	fi
 	# move PACKAGE and all associated files to TMP directory
@@ -203,9 +235,11 @@ repo_delete() {
 		mv "${TARGET_DIR}.${SUFFIX}" "${TMP}/"
 	done
 	# delete PACKAGE from database
+	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
+		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	printf "INFO: delete package from SQLite DB.\n"
-	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASE}' AND \
-		repo_path = '${REPO_PATH}/${PKG_BASE}${PKG_SUFFIX}';"
+	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASENAME}' AND \
+		repo_path = '${SQL_REPO_PATH}';"
 	# remote TMP directory
 	printf "INFO: clean-up.\n"
 	rm -rf "${TMP}"
@@ -221,6 +255,7 @@ sqlite_exists() {
 	return 0
 } # sqlite_exists()
 # Desc: initialize SQLite DB for Slackware Repository
+# $returns: 0 on success, otherwise 1
 sqlite_init() {
 	RC=1
 	SQL_DIR=$(dirname "${SQL_DB}")
@@ -240,40 +275,46 @@ sqlite_init() {
 	return ${RC}
 } # sqlite_init()
 
-# check whether SQLite DB exists; if not, create it
-
 ### MAIN
 ACTION=${1:-''}
 # Remove original of package we are adding
 RM_ORG_PKG='0'
-
-
+# Note: check whether SQLite DB exists; if not, create it
+if ! sqlite_exists ; then
+	if ! sqlite_init ; then
+		printf "WARN: Failed to init SQLite DB '%s'.\n" "${SQL_DB}" 1>&2
+		return 1
+	else
+		printf "INFO: Initialized SQLite DB '%s'.\n" "${SQL_DB}"
+	fi
+fi
+#
 case "${ACTION}" in
 	'add')
 		ARG2=${2:-''}
 		ARG3=${3:-''}
+		if [ $# -gt 3 ]; then
+			printf "Too many arguments given.\n" 1>&2
+			exit 1
+		fi
 		if [ -z "${ARG2}" ] || [ -z "${ARG3}" ]; then
 			printf "Missing an argument.\n" 1>&2
 			# TODO - show ADD specific help
 			exit 1
-		fi
-		if [ "${ARG2}" = 'help' ]; then
-			# TODO
-			exit 0
 		fi
 		repo_add "${ARG2}" "${ARG3}"
 		;;
 	'delete')
 		ARG2=${2:-''}
 		ARG3=${3:-''}
+		if [ $# -gt 2 ]; then
+			printf "Too many arguments given.\n" 1>&2
+			exit 1
+		fi
 		if [ -z "${ARG2}" ]; then
 			printf "Missing an argument.\n" 1>&2
 			# TODO - show DELETE specific help
 			exit 1
-		fi
-		if [ ! -z "${ARG3}" ]; then
-			# TODO
-			exit 0
 		fi
 		repo_delete "${ARG2}"
 		;;
