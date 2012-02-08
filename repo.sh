@@ -166,6 +166,7 @@ repo_add() {
 		[ -e "${TARGET_DIR}/${PKG_BASENAME}.${PKG_SUFFIX}" ]; then
 		# TODO - remove previous versions of package and so on
 		printf "Not Implemented\n"
+		return 1
 	fi
 	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 		repo_path, checksum) \
