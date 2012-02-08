@@ -225,8 +225,11 @@ repo_delete() {
 		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	PKGFOUND_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
 		repo_path = '${SQL_REPO_PATH}';")
-	if [ "${PKGFOUND_COUNT}" != "0" ] && [ $FORCE -eq 0 ]; then
+	if [ "${PKGFOUND_COUNT}" != "1" ] && [ $FORCE -eq 0 ]; then
 		printf "repo_delete(): Package not found in DB.\n" 1>&2
+		pritnf "repo_delete(): PKGs found %s, expected 1.\n" \
+			"${PKGFOUND_COUNT}" 1>&2
+		printf "repo_delete(): Perhaps you want to use force.\n" 1>&2
 		return 1
 	fi
 	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
