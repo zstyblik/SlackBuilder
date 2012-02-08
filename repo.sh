@@ -227,7 +227,7 @@ repo_delete() {
 		repo_path = '${SQL_REPO_PATH}';")
 	if [ "${PKGFOUND_COUNT}" != "1" ] && [ $FORCE -eq 0 ]; then
 		printf "repo_delete(): Package not found in DB.\n" 1>&2
-		pritnf "repo_delete(): PKGs found %s, expected 1.\n" \
+		printf "repo_delete(): PKGs found %s, expected 1.\n" \
 			"${PKGFOUND_COUNT}" 1>&2
 		printf "repo_delete(): Perhaps you want to use force.\n" 1>&2
 		return 1
