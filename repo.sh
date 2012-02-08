@@ -6,8 +6,10 @@
 # Command composition:
 # $0 [OPTS] <action>
 # $0 add $PATH_TO_PKG $WHERE_TO_PUT_IT_IN_REPO
-# $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz k/
-# $0 delete kernel-huge-x.y.z-x86_64-1.txz k/
+# $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/
+#
+# $0 delete $PATH_TO_PKG_TO_DELETE
+# $0 delete /usr/src/repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz
 #
 # ---
 # Package name dissected: 
@@ -82,7 +84,20 @@ get_pkg_suffix() {
 } # get_pkg_suffix()
 # Desc: print help text.
 print_help() {
-	printf "HELP, write me!\n"
+	cat << HELP
+
+	$0 - Slackware repository maintenance
+
+	Usage:
+	% $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
+	% $0 delete <PATH_TO_FILE_TO_REMOVE> ;
+
+	Examples:
+	% $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
+	% $0 delete /usr/src/repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz ;
+
+HELP
+
 	return 0
 } # print_help
 
@@ -308,11 +323,12 @@ case "${ACTION}" in
 		ARG3=${3:-''}
 		if [ $# -gt 3 ]; then
 			printf "Too many arguments given.\n" 1>&2
+			show_help
 			exit 1
 		fi
 		if [ -z "${ARG2}" ] || [ -z "${ARG3}" ]; then
 			printf "Missing an argument.\n" 1>&2
-			# TODO - show ADD specific help
+			show_help
 			exit 1
 		fi
 		repo_add "${ARG2}" "${ARG3}"
@@ -322,11 +338,12 @@ case "${ACTION}" in
 		ARG3=${3:-''}
 		if [ $# -gt 2 ]; then
 			printf "Too many arguments given.\n" 1>&2
+			show_help
 			exit 1
 		fi
 		if [ -z "${ARG2}" ]; then
 			printf "Missing an argument.\n" 1>&2
-			# TODO - show DELETE specific help
+			show_help
 			exit 1
 		fi
 		repo_delete "${ARG2}"
