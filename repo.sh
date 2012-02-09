@@ -92,6 +92,10 @@ print_help() {
 	% $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
 	% $0 delete <PATH_TO_FILE_TO_REMOVE> ;
 
+	Options:
+	* -f	force
+	* -o	remove original copy of package added into repository
+
 	Examples:
 	% $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
 	% $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz ;
@@ -336,6 +340,26 @@ if ! sqlite_exists ; then
 		printf "INFO: Initialized SQLite DB '%s'.\n" "${SQL_DB}"
 	fi
 fi
+#
+while getopts fo OPT; do
+	case "${OPT}" in
+		'f')
+			FORCE=1
+			;;
+		'o')
+			RM_ORG_PKG=1
+			;;
+		\?)
+			echo "Unknown option."
+			show_help
+			exit 1
+			;;
+		\*)
+			show_help
+			exit 1
+		;;
+	esac
+done
 #
 case "${ACTION}" in
 	'add')
