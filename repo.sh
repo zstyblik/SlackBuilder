@@ -9,7 +9,7 @@
 # $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/
 #
 # $0 delete $PATH_TO_PKG_TO_DELETE
-# $0 delete /usr/src/repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz
+# $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz
 #
 # ---
 # Package name dissected: 
@@ -94,7 +94,7 @@ print_help() {
 
 	Examples:
 	% $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
-	% $0 delete /usr/src/repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz ;
+	% $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz ;
 
 HELP
 
