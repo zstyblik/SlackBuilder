@@ -169,6 +169,14 @@ repo_add() {
 				exit 1
 			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 		fi # if grep -q -e '^CHECKSUM' ...
+		if [ -z "${APPL}" ]; then
+			printf "ERRO: APPL is empty! Unable to continue.\n"
+			exit 1
+		fi
+		if [ -z "${VERSION}" ]; then
+			VERSION='unknown'
+			printf "WARN: VERSION is empty! Will be set to '%s'!\n" "${VERSION}"
+		fi
 	else
 		# Note: perhaps we want to add eg. README file or such
 		printf "WARN: File '%s' doesn't exist.\n" \
@@ -178,6 +186,12 @@ repo_add() {
 		CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 		CHECKSUM="MD5#${CHECKSUM}"
 	fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
+
+	if [ -z "${CHECKSUM}" ]; then
+		printf "ERRO: CHECKSUM is empty! Unable to continue.\n"
+		exit 1
+	fi
+
 	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}" \
 		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	# This should be either 0 or 1
