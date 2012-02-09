@@ -29,7 +29,7 @@
 # ~~~
 # APPL wine
 # VERSION 1.3.37
-# MD5SUM 5483e192e6fbdc95c8eaf9ed46d61e70
+# CHECKSUM MD5#5483e192e6fbdc95c8eaf9ed46d61e70
 # ~~~
 # These keys are used so far, because the rest can be obtained from command
 # line.
@@ -150,27 +150,33 @@ repo_add() {
 	#
 	APPL=''
 	VERSION=''
-	MD5SUM=''
+	CHECKSUM=''
 	if [ -e "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" ]; then
 		APPL=$(grep -e '^APPL ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
 		VERSION=$(grep -e '^VERSION ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
-		MD5SUM=$(grep -e '^MD5SUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
+		CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
 			awk -F ' ' '{ print $2 }')
 		#
-		MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
-		if [ "${MD5SUM}" != "${MD5SUM_EXT}" ]; then
-			printf "ERRO: MD5 sums do not match.\n" 1>&2
-			exit 1
-		fi # if [ "${MD5SUM}" != "${MD5SUM_EXT}" ]; then
+		if grep -e '^CHECKSUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
+			grep -q -e 'MD5#' ; then
+			#
+			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
+			if [ "${CHECKSUM}" != "${CHECKSUM_EXT}" ]; then
+				printf "ERRO: MD5 sums do not match.\n" 1>&2
+				exit 1
+			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
+		fi # if grep -q -e '^CHECKSUM' ...
 	else
 		# Note: perhaps we want to add eg. README file or such
 		printf "WARN: File '%s' doesn't exist.\n" \
 			"${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" 1>&2
 		APPL=$PKG_BASENAME
 		VERSION='unknown'
-		MD5SUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+		CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+		CHECKSUM="MD5#${CHECKSUM}"
 	fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
 	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}" \
 		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
@@ -186,7 +192,7 @@ repo_add() {
 	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 		repo_path, checksum) \
 	VALUES ('${APPL}', '${VERSION}', '${PKG_BASENAME}', '${PKG_SUFFIX}', \
-	'${SQL_REPO_PATH}', 'MD5#${MD5SUM}');"
+	'${SQL_REPO_PATH}', '${CHECKSUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
 	fi
