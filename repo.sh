@@ -144,7 +144,7 @@ repo_add() {
 		if ! mkdir -p "${TARGET_DIR}"; then
 			printf "repo_add(): Unable to create directory '%s'.\n" \
 				"${TARGET_DIR}" 1>&2
-			exit 1
+			return 1
 		fi
 	fi # if [ ! -d "${TARGET_DIR}" ]; then
 	#
@@ -166,12 +166,12 @@ repo_add() {
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 			if [ "${CHECKSUM}" != "${CHECKSUM_EXT}" ]; then
 				printf "ERRO: MD5 sums do not match.\n" 1>&2
-				exit 1
+				return 1
 			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 		fi # if grep -q -e '^CHECKSUM' ...
 		if [ -z "${APPL}" ]; then
 			printf "ERRO: APPL is empty! Unable to continue.\n"
-			exit 1
+			return 1
 		fi
 		if [ -z "${VERSION}" ]; then
 			VERSION='unknown'
@@ -189,7 +189,7 @@ repo_add() {
 
 	if [ -z "${CHECKSUM}" ]; then
 		printf "ERRO: CHECKSUM is empty! Unable to continue.\n"
-		exit 1
+		return 1
 	fi
 
 	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}" \
@@ -310,7 +310,7 @@ sqlite_init() {
 		if ! mkdir -p "${SQL_DIR}" ; then
 			printf "sqlite_init(): Unable to create directory '%s'.\n" \
 				"${SQL_DIR}" 1>&2
-			exit 1
+			return 1
 		fi
 	fi # if [ ! -d "${SQL_DIR}" ]; then
 	if sqlite3 -init "${SQL_REPO_TMPL}" "${SQL_DB}" '.q' 2>&1 | \
