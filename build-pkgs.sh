@@ -84,6 +84,10 @@ buildpkg() {
 		printf "[%s] no external TXT desc found.\n" "${SBNAME}"
 	fi
 
+	if ! mv ${TMP}/${SBNAME}*.pkgdesc "${REPODEST}" ; then
+		printf "[%s] no PKGDESC file found!\n" "${SBNAME}"
+	fi
+
 	if ! mv ${TMP}/${SBNAME}*.md5 "${REPODEST}" ; then
 		printf "[%s] no external MD5 file found.\n" "${SBNAME}"
 	fi
