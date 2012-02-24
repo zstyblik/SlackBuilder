@@ -85,20 +85,20 @@ get_pkg_suffix() {
 # Desc: print help text.
 print_help() {
 	cat << HELP
+Usage: $0 <ACTION> [PARAMS]
+$0 - Slackware repository maintenance
 
-	$0 - Slackware repository maintenance
+Usage:
+  % $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
+  % $0 delete <PATH_TO_FILE_TO_REMOVE> ;
 
-	Usage:
-	% $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
-	% $0 delete <PATH_TO_FILE_TO_REMOVE> ;
+Options:
+  * -f	force
+  * -o	remove original copy of package added into repository
 
-	Options:
-	* -f	force
-	* -o	remove original copy of package added into repository
-
-	Examples:
-	% $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
-	% $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz ;
+Examples:
+  % $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
+  % $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz ;
 
 HELP
 
@@ -196,14 +196,22 @@ repo_add() {
 		return 1
 	fi
 
-	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}" \
-		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
+	SQL_REPO_PATH_PART=$(printf "%s/%s" "${INREPO_PATH}" "${PKG_BASENAME}" |\
+		sed -r -e 's@/+@/@g')
+	SQL_REPO_PATH=$(printf "%s%s" "${SQL_REPO_PATH_PART}" "${PKG_SUFFIX}")
 	# This should be either 0 or 1
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
-		appl = '${APPL}' AND repo_path =	'${SQL_REPO_PATH}';")
-	if [ "${CONFL_COUNT}" != "0" ] || \
-		[ -e "${TARGET_DIR}/${PKG_BASENAME}.${PKG_SUFFIX}" ]; then
+		appl = '${APPL}' AND repo_path = '${SQL_REPO_PATH_PART}';")
+	if [ 
+			[ "${CONFL_COUNT}" != "0" ] ||
+			[ -e "${TARGET_DIR}/${PKG_BASENAME}.${PKG_SUFFIX}" ]
+		] && [ $RM_ORG_PKG -eq 1 ]; then
 		# TODO - remove previous versions of package and so on
+		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path, name, suffix \
+			FROM repo WHERE appl = '${APPL}' AND \
+			repo_path LIKE '${SQL_REPO_PATH_PART}%';"); do
+			# foo
+		done
 		printf "Not Implemented\n"
 		return 1
 	fi
