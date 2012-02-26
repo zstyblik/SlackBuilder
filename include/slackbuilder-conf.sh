@@ -21,6 +21,8 @@ REPO_DIR=${REPO_DIR:-"${PREFIX}/repo/"}
 PROFILES_DIR=${PROFILES_DIR:-"${PREFIX}/profiles/"}
 # Directory with SlackBuilds
 SBO_DIR=${SBO_DIR:-"${PREFIX}/SlackBuilds/"}
+# Directory with sources for SlackBuilds or keep empty for SlackBuild default
+SOURCES=${SOURCES:-"/usr/src/SlackBuildSources/"}
 
 
 ### BLOAT ###
