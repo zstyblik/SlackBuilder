@@ -51,7 +51,15 @@
 #
 set -e
 set -u
-
+### VARS
+ACTION=${1:-''}
+# Force actions
+FORCE=0
+# Remove previous versions of package
+RM_PREV_PKG=1
+# Remove original of package after it is added into repo
+RM_ORG_PKG=0
+###
 PREFIX=$(dirname "${0}")
 if [ ${PREFIX} = '.' ]; then
 	PREFIX=$(pwd)
@@ -335,10 +343,6 @@ sqlite_init() {
 } # sqlite_init()
 
 ### MAIN
-ACTION=${1:-''}
-FORCE=0
-# Remove original of package we are adding
-RM_ORG_PKG=0
 # Note: check whether SQLite DB exists; if not, create it
 if ! sqlite_exists ; then
 	if ! sqlite_init ; then
