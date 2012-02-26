@@ -176,7 +176,7 @@ repo_add() {
 			#
 			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
-			if [ "${CHECKSUM}" != "${CHECKSUM_EXT}" ]; then
+			if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 				printf "ERRO: MD5 sums do not match.\n" 1>&2
 				return 1
 			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
