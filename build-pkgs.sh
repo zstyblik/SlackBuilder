@@ -20,6 +20,7 @@ export ARCH
 export LIBDIRSUFFIX
 export TMP_PREFIX
 export SLACKVER
+export SOURCES
 
 # build everything
 buildall() {
