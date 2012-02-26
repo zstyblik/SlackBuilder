@@ -205,24 +205,34 @@ repo_add() {
 		return 1
 	fi
 
-	SQL_REPO_PATH_PART=$(printf "%s/%s" "${INREPO_PATH}" "${PKG_BASENAME}" |\
+	SQL_REPO_PATH_PART=$(printf "%s/%s-" "${INREPO_PATH}" "${APPL}" |\
 		sed -r -e 's@/+@/@g')
-	SQL_REPO_PATH=$(printf "%s%s" "${SQL_REPO_PATH_PART}" "${PKG_SUFFIX}")
+	SQL_REPO_PATH=$(printf "%s/%s%s" "${INREPO_PATH}" "${PKG_BASENAME}"\
+	       	"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
 	# This should be either 0 or 1
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
-		appl = '${APPL}' AND repo_path = '${SQL_REPO_PATH_PART}';")
-	if [ 
-			[ "${CONFL_COUNT}" != "0" ] ||
-			[ -e "${TARGET_DIR}/${PKG_BASENAME}.${PKG_SUFFIX}" ]
-		] && [ $RM_ORG_PKG -eq 1 ]; then
+		appl = '${APPL}' AND repo_path LIKE '${SQL_REPO_PATH_PART}%';")
+	if [ $RM_PREV_PKG -eq 1 ] && [ "${CONFL_COUNT}" != "0" ]; then
 		# TODO - remove previous versions of package and so on
-		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path, name, suffix \
+		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path,\
+			name, suffix \
 			FROM repo WHERE appl = '${APPL}' AND \
 			repo_path LIKE '${SQL_REPO_PATH_PART}%';"); do
 			# foo
+			true
 		done
-		printf "Not Implemented\n"
-		return 1
+		printf "WARN: Not Implemented\n"
+	else
+		if [ $CONFL_COUNT -gt 0 ]; then
+			printf "INFO: %i conflicting package(s) ignored.\n"\
+				$CONFL_COUNT
+		fi
+	fi
+	if [ -e "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}" ]; then
+		# No duplicates in repo and DB, amigo.
+		rm -f "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}"
+		sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' \
+			AND repo_path = '${SQL_REPO_PATH}';"
 	fi
 	sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 		repo_path, checksum) \
@@ -275,7 +285,7 @@ repo_delete() {
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
 	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
-			"${TARGET_DIR}.${PKG_SUFFIX}" 1>&2
+			"${TARGET_DIR}${PKG_SUFFIX}" 1>&2
 		return 1
 	fi
 	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
