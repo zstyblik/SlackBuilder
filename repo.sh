@@ -99,6 +99,7 @@ $0 - Slackware repository maintenance
 Usage:
   % $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
   % $0 delete <PATH_TO_FILE_TO_REMOVE> ;
+  % $0 help ;
 
 Options:
   * -f	force
@@ -403,6 +404,9 @@ case "${ACTION}" in
 			exit 1
 		fi
 		repo_delete "${ARG2}"
+		;;
+	'help')
+		show_help
 		;;
 	'scan')
 		repo_scan
