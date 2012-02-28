@@ -247,14 +247,86 @@ repo_add() {
 	return 0
 } # repo_add()
 
-# Desc: health/integrity check of repository
+# Desc: More like a hack how to get repository up and running quickly including
+# dist-version of packages mixed with "home-brew".
+# * cd REPODIR
+# * list all files excluding directories
+# * check whether file is already in DB
+#  - if it IS NOT
+#  - if file is PKG, check whether previous VER is already in DB; if so, rm'em
+#  - try to gather information - version, checksum, appl, etc.
+#  - insert PKG info into DB
+#  + if it IS
+#  + check whether CHECKSUM got changed; if so, report mismatch
 repo_scan() {
+	if [ ! -d "${REPODIR}/${SLACKVER}" ]; then
+		printf "ERRO: Repo directory '%s/%s' doesn't exist.\n" "${REPODIR}" \
+			"${SLACKVER}" 1>&2
+		return 1
+	fi # if [ ! -d "${REPODIR}/${SLACKVER}" ]
+	cd "${REPODIR}/${SLACKVER}"
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
+	for FILE in $(find ./ ! -type d); do
+		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
+			repo_path = '${FILE}';")
+		if [ $COUNT -eq 0 ]; then
+			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
+			# TODO - check whether previous version of PKG exists in DB.
+			FILEBASE=$(basename "${FILE}")
+			DIRBASE=$(dirname "${FILE}")
+			PKG_DESC="${DIRBASE}/${FILEBASE}.pkgdesc"
+			#
+			APPL=''
+			VERSION=''
+			CHECKSUM=''
+			if [ -e "${PKG_DESC}" ]; then
+				APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
+				VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
+				CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | \
+					awk -F ' ' '{ print $2 }')
+				#
+				if grep -e '^CHECKSUM ' "${PKG_DESC}" | grep -q -e 'MD5#' ; then
+					#
+					MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+					MD5SUM_EXT="MD5#${MD5SUM_EXT}"
+					if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
+						printf "ERRO: MD5 sums do not match.\n" 1>&2
+						continue
+					fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
+				fi # if grep -q -e '^CHECKSUM' ...
+				if [ -z "${APPL}" ]; then
+					printf "ERRO: APPL is empty! Unable to continue.\n"
+					continue
+				fi
+				if [ -z "${VERSION}" ]; then
+					VERSION='unknown'
+					printf "WARN: VERSION is empty! Will be set to '%s'!\n" "${VERSION}"
+				fi
+			# elif [ $ISPKG == 1 ]; then
+			# TODO - try to determine info from filename itself
+			else
+				# Note: perhaps we want to add eg. README file or such
+				printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
+				APPL=$PKG_BASENAME
+				VERSION='unknown'
+				CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+				CHECKSUM="MD5#${CHECKSUM}"
+			fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
+			sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
+				repo_path, checksum) \
+				VALUES ('${APPL}', '${VERSION}', '${PKG_BASENAME}', '${PKG_SUFFIX}', \
+				'${SQL_REPO_PATH}', '${CHECKSUM}');"
+		else
+			# TODO - check, whether CHECKSUM matches or has changed.
+			continue
+		fi
+	done # for FILE
 	return 0
 } # repo_scan()
 
 # Desc: remove package from repository
 # REPO_PATH=/mnt/repo/slackware64-13.37/slackware64/xap/wine-1.3.37-x86_64-1alien.txz
+# @REPO_PATH: path to file to be removed from Repository
 repo_delete() {
 	REPO_PATH=${1:-''}
 	if [ -z "${REPO_PATH}" ]; then
