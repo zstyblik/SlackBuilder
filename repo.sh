@@ -90,7 +90,9 @@ get_pkg_suffix() {
 	printf "%s" "${PKG_SUFFIX}"
 	return 0
 } # get_pkg_suffix()
+
 # Desc: print help text.
+# $returns: always 0
 print_help() {
 	cat << HELP
 Usage: $0 <ACTION> [PARAMS]
@@ -400,6 +402,7 @@ sqlite_exists() {
 	fi
 	return 0
 } # sqlite_exists()
+
 # Desc: initialize SQLite DB for Slackware Repository
 # $returns: 0 on success, otherwise 1
 sqlite_init() {
