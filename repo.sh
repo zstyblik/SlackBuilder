@@ -251,7 +251,7 @@ repo_add() {
 
 # Desc: More like a hack how to get repository up and running quickly including
 # dist-version of packages mixed with "home-brew".
-# * cd REPODIR
+# * cd REPO_DIR
 # * list all files excluding directories
 # * check whether file is already in DB
 #  - if it IS NOT
@@ -261,12 +261,12 @@ repo_add() {
 #  + if it IS
 #  + check whether CHECKSUM got changed; if so, report mismatch
 repo_scan() {
-	if [ ! -d "${REPODIR}/${SLACKVER}" ]; then
-		printf "ERRO: Repo directory '%s/%s' doesn't exist.\n" "${REPODIR}" \
+	if [ ! -d "${REPO_DIR}/${SLACKVER}" ]; then
+		printf "ERRO: Repo directory '%s/%s' doesn't exist.\n" "${REPO_DIR}" \
 			"${SLACKVER}" 1>&2
 		return 1
-	fi # if [ ! -d "${REPODIR}/${SLACKVER}" ]
-	cd "${REPODIR}/${SLACKVER}"
+	fi # if [ ! -d "${REPO_DIR}/${SLACKVER}" ]
+	cd "${REPO_DIR}/${SLACKVER}"
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
 	for FILE in $(find ./ ! -type d); do
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
