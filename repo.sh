@@ -137,6 +137,7 @@ repo_add() {
 	PKG_SUFFIX=$(get_pkg_suffix "${FILE_TO_ADD}")
 	PKG_BASENAME=$(basename "${FILE_TO_ADD}" "${PKG_SUFFIX}")
 	PKG_BASEDIR=$(dirname "${FILE_TO_ADD}")
+	PKG_DESC="${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc"
 	#
 	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${INREPO_PATH}/"
 	if printf "%s" "${INREPO_PATH}" | grep -q -e '^/' ; then
@@ -164,16 +165,12 @@ repo_add() {
 	APPL=''
 	VERSION=''
 	CHECKSUM=''
-	if [ -e "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" ]; then
-		APPL=$(grep -e '^APPL ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
-			awk -F ' ' '{ print $2 }')
-		VERSION=$(grep -e '^VERSION ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
-			awk -F ' ' '{ print $2 }')
-		CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
-			awk -F ' ' '{ print $2 }')
+	if [ -e "${PKG_DESC}" ]; then
+		APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
+		VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
+		CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 		#
-		if grep -e '^CHECKSUM ' "${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" | \
-			grep -q -e 'MD5#' ; then
+		if grep -e '^CHECKSUM ' "${PKG_DESC}" | grep -q -e 'MD5#' ; then
 			#
 			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
@@ -192,8 +189,7 @@ repo_add() {
 		fi
 	else
 		# Note: perhaps we want to add eg. README file or such
-		printf "WARN: File '%s' doesn't exist.\n" \
-			"${PKG_BASEDIR}/${PKG_BASENAME}.pkgdesc" 1>&2
+		printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
 		APPL=$PKG_BASENAME
 		VERSION='unknown'
 		CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
