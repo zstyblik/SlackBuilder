@@ -272,7 +272,6 @@ repo_scan() {
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
 			repo_path = '${FILE}';")
 		if [ $COUNT -eq 0 ]; then
-			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 			FILE_BASE=$(basename "${FILE}")
 			DIR_BASE=$(dirname "${FILE}")
 			PKG_DESC="${DIR_BASE}/${FILE_BASE}.pkgdesc"
@@ -339,6 +338,7 @@ repo_scan() {
 				CHECKSUM=$MD5SUM_EXT
 			fi # if [ -e "${FILE_BASE}.pkgdesc" ]; then
 			# TODO - check whether previous version of PKG exists in DB.
+			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 			sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 				repo_path, checksum) \
 				VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '.${FILE_SUFFIX}', \
