@@ -268,19 +268,47 @@ repo_scan() {
 	fi # if [ ! -d "${REPO_DIR}/${SLACKVER}" ]
 	cd "${REPO_DIR}/${SLACKVER}"
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
-	for FILE in $(find ./ ! -type d); do
+	for FILE in $(find ./ ! -type d | cut -d '/' -f 2-); do
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
 			repo_path = '${FILE}';")
 		if [ $COUNT -eq 0 ]; then
 			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
-			# TODO - check whether previous version of PKG exists in DB.
-			FILEBASE=$(basename "${FILE}")
-			DIRBASE=$(dirname "${FILE}")
-			PKG_DESC="${DIRBASE}/${FILEBASE}.pkgdesc"
+			FILE_BASE=$(basename "${FILE}")
+			DIR_BASE=$(dirname "${FILE}")
+			PKG_DESC="${DIR_BASE}/${FILE_BASE}.pkgdesc"
+			#
+			FILE_SUFFIX=$(printf "%s" "${FILE}" | \
+				awk '{ items=split($0, arr, "."); print arr[items]; }')
+			if [ $FILE_SUFFIX = $FILE ]; then
+				FILE_SUFFIX=''
+			fi
+			if [ $FILE_SUFFIX = 'sq3' ]; then
+				# Don't add SQLite DB file into Repo DB!
+				continue
+			fi
 			#
 			APPL=''
 			VERSION=''
 			CHECKSUM=''
+			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
+			# If PKGDESC doesn't exists and FILE is PKG, try to create it.
+			if [ ! -e "${PKGDESC}" ] && [ $FILE_SUFFIX = 'tgz' ] || \
+				[ $FILE_SUFFIX = 'txz' ]; then
+				if ! printf "%s" "${FILE_BASE}" | \
+					awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
+					printf "WARN: Unable to get PKGDESC from '%s'.\n" "${FILE_BASE}" 2>&1
+				else
+					if ! printf "%s" "${FILE_BASE}" | \
+						awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKGDESC}"; then
+						printf "ERRO: Failed to create PKGDESC." 1>&2
+						rm -f "${PKGDESC}"
+					else
+						printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKGDESC}"
+					fi
+				fi
+			fi
+			#
 			if [ -e "${PKG_DESC}" ]; then
 				APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 				VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
@@ -289,40 +317,47 @@ repo_scan() {
 				#
 				if grep -e '^CHECKSUM ' "${PKG_DESC}" | grep -q -e 'MD5#' ; then
 					#
-					MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
-					MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 					if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 						printf "ERRO: MD5 sums do not match.\n" 1>&2
 						continue
 					fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 				fi # if grep -q -e '^CHECKSUM' ...
 				if [ -z "${APPL}" ]; then
-					printf "ERRO: APPL is empty! Unable to continue.\n"
+					printf "ERRO: APPL is empty! Unable to continue.\n" 1>&2
 					continue
 				fi
 				if [ -z "${VERSION}" ]; then
 					VERSION='unknown'
-					printf "WARN: VERSION is empty! Will be set to '%s'!\n" "${VERSION}"
+					printf "WARN: VERSION is empty! Will be set to '%s'!\n" \
+						"${VERSION}" 1>&2
 				fi
-			# elif [ $ISPKG == 1 ]; then
-			# TODO - try to determine info from filename itself
 			else
 				# Note: perhaps we want to add eg. README file or such
 				printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
-				APPL=$PKG_BASENAME
+				APPL=$FILE_BASE
 				VERSION='unknown'
-				CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
-				CHECKSUM="MD5#${CHECKSUM}"
-			fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
+				CHECKSUM=$MD5SUM_EXT
+			fi # if [ -e "${FILE_BASE}.pkgdesc" ]; then
+			# TODO - check whether previous version of PKG exists in DB.
 			sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 				repo_path, checksum) \
-				VALUES ('${APPL}', '${VERSION}', '${PKG_BASENAME}', '${PKG_SUFFIX}', \
-				'${SQL_REPO_PATH}', '${CHECKSUM}');"
+				VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '.${FILE_SUFFIX}', \
+				'${FILE}', '${CHECKSUM}');"
 		else
-			# TODO - check, whether CHECKSUM matches or has changed.
-			continue
+			CHECKSUMSQL=$(sqlite3 "${SQL_DB}" "SELECT checksum FROM repo WHERE \
+				repo_path = '${FILE}';")
+			if printf "%s" "${CHECKSUMSQL}" | grep -q -e '^MD5#' ; then
+				MD5SUM=$(md5sum "${FILE}" | cut -d ' ' -f 1)
+				MD5SUM="MD5#$MD5SUM"
+				if [ $CHECKSUMSQL != $MD5SUM ]; then
+					printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
+				fi
+			else
+				printf "ERRO: Checking of other than MD5SUM is not implemented.\n" 1>&2
+			fi
 		fi
 	done # for FILE
+	# TODO - sync CHECKSUMS MD5 file here
 	return 0
 } # repo_scan()
 
