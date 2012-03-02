@@ -21,12 +21,11 @@
 	counter = 2;
 	name = arr[1];
 	while (counter <= items) {
-		print arr[counter];
 		name = sprintf("%s-%s", name, arr[counter]);
 		counter++;
 	}
-	printf("APPL: %s\n", name);
-	printf("VER: %s\n", arr[items]);
-	printf("ARCH: %s\n", arr[items]);
-	printf("BUILD: %s\n", arr[items]);
+	printf("APPL %s\n", name);
+	printf("VERSION %s\n", version);
+	printf("ARCH %s\n", arch);
+	printf("BUILD %s\n", build);
 }
