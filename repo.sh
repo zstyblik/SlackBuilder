@@ -272,6 +272,9 @@ repo_scan() {
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
 	for FILE in $(find ./ ! -type d | cut -d '/' -f 2-); do
 		printf "INFO: File '%s'.\n" "${FILE}"
+		if printf "%s" "${FILE}" | grep -q -e 'CHECKSUMS\.md5' ; then
+			continue
+		fi
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
 			repo_path = '${FILE}';")
 		if [ $COUNT -eq 0 ]; then
