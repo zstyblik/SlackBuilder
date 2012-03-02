@@ -48,6 +48,8 @@
 # My $0.02 USD
 #
 # ---
+# Known bugs:
+# * newly created PKGDESC files don't get added into DB
 #
 set -e
 set -u
@@ -269,21 +271,29 @@ repo_scan() {
 	cd "${REPO_DIR}/${SLACKVER}"
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
 	for FILE in $(find ./ ! -type d | cut -d '/' -f 2-); do
+		printf "INFO: File '%s'.\n" "${FILE}"
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
 			repo_path = '${FILE}';")
 		if [ $COUNT -eq 0 ]; then
 			FILE_BASE=$(basename "${FILE}")
 			DIR_BASE=$(dirname "${FILE}")
-			PKG_DESC="${DIR_BASE}/${FILE_BASE}.pkgdesc"
 			#
 			FILE_SUFFIX=$(printf "%s" "${FILE}" | \
 				awk '{ items=split($0, arr, "."); print arr[items]; }')
 			if [ $FILE_SUFFIX = $FILE ]; then
 				FILE_SUFFIX=''
+			else
+				FILE_SUFFIX=".${FILE_SUFFIX}"
 			fi
-			if [ $FILE_SUFFIX = 'sq3' ]; then
+			if [ "${FILE_SUFFIX}" = '.sq3' ]; then
 				# Don't add SQLite DB file into Repo DB!
 				continue
+			fi
+			if [ "${FILE_SUFFIX}" != '' ]; then
+				FILE_NOSUFFIX=$(basename "${FILE_BASE}" "${FILE_SUFFIX}")
+				PKG_DESC="${DIR_BASE}/${FILE_NOSUFFIX}.pkgdesc"
+			else
+				PKG_DESC="${DIR_BASE}/${FILE}.pkgdesc"
 			fi
 			#
 			APPL=''
@@ -292,8 +302,8 @@ repo_scan() {
 			MD5SUM_EXT=$(md5sum "${FILE}" | cut -d ' ' -f 1)
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 			# If PKGDESC doesn't exists and FILE is PKG, try to create it.
-			if [ ! -e "${PKG_DESC}" ] && [ $FILE_SUFFIX = 'tgz' ] || \
-				[ $FILE_SUFFIX = 'txz' ]; then
+			if [ ! -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+				[ "${FILE_SUFFIX}" = '.txz' ]; then
 				if ! printf "%s" "${FILE_BASE}" | \
 					awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
 					printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}" 2>&1
@@ -308,7 +318,8 @@ repo_scan() {
 				fi
 			fi
 			#
-			if [ -e "${PKG_DESC}" ]; then
+			if [ -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+				[ "${FILE_SUFFIX}" = '.txz' ]; then
 				APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 				VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 				CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | \
@@ -341,7 +352,7 @@ repo_scan() {
 			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 			sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 				repo_path, checksum) \
-				VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '.${FILE_SUFFIX}', \
+				VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '${FILE_SUFFIX}', \
 				'${FILE}', '${CHECKSUM}');"
 		else
 			CHECKSUMSQL=$(sqlite3 "${SQL_DB}" "SELECT checksum FROM repo WHERE \
@@ -358,6 +369,10 @@ repo_scan() {
 		fi
 	done # for FILE
 	# TODO - sync CHECKSUMS MD5 file here
+#	sqlite3 "${SQL_DB}" \
+#		"SELECT checksum, repo_path FROM repo ORDER BY repo_path;" | \
+#		awk -F'|' '{ printf("%s\t./%s\n", $1, $2); }' | \
+#		sed 's@^MD5#@@' > "${CHECKSUMS_PATH}/CHECKSUMS.md5"
 	return 0
 } # repo_scan()
 
