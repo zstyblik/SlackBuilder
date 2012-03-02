@@ -289,21 +289,21 @@ repo_scan() {
 			APPL=''
 			VERSION=''
 			CHECKSUM=''
-			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
+			MD5SUM_EXT=$(md5sum "${FILE}" | cut -d ' ' -f 1)
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 			# If PKGDESC doesn't exists and FILE is PKG, try to create it.
-			if [ ! -e "${PKGDESC}" ] && [ $FILE_SUFFIX = 'tgz' ] || \
+			if [ ! -e "${PKG_DESC}" ] && [ $FILE_SUFFIX = 'tgz' ] || \
 				[ $FILE_SUFFIX = 'txz' ]; then
 				if ! printf "%s" "${FILE_BASE}" | \
 					awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
-					printf "WARN: Unable to get PKGDESC from '%s'.\n" "${FILE_BASE}" 2>&1
+					printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}" 2>&1
 				else
 					if ! printf "%s" "${FILE_BASE}" | \
-						awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKGDESC}"; then
-						printf "ERRO: Failed to create PKGDESC." 1>&2
-						rm -f "${PKGDESC}"
+						awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKG_DESC}"; then
+						printf "ERRO: Failed to create PKGDESC.\n" 1>&2
+						rm -f "${PKG_DESC}"
 					else
-						printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKGDESC}"
+						printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
 					fi
 				fi
 			fi
