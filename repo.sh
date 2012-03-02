@@ -464,7 +464,7 @@ sqlite_init() {
 if ! sqlite_exists ; then
 	if ! sqlite_init ; then
 		printf "WARN: Failed to init SQLite DB '%s'.\n" "${SQL_DB}" 1>&2
-		return 1
+		exit 1
 	else
 		printf "INFO: Initialized SQLite DB '%s'.\n" "${SQL_DB}"
 	fi
