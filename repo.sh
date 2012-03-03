@@ -275,89 +275,10 @@ repo_scan() {
 		if printf "%s" "${FILE}" | grep -q -e 'CHECKSUMS\.md5' ; then
 			continue
 		fi
+		#
 		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
 			repo_path = '${FILE}';")
-		if [ $COUNT -eq 0 ]; then
-			FILE_BASE=$(basename "${FILE}")
-			DIR_BASE=$(dirname "${FILE}")
-			#
-			FILE_SUFFIX=$(printf "%s" "${FILE}" | \
-				awk '{ items=split($0, arr, "."); print arr[items]; }')
-			if [ $FILE_SUFFIX = $FILE ]; then
-				FILE_SUFFIX=''
-			else
-				FILE_SUFFIX=".${FILE_SUFFIX}"
-			fi
-			if [ "${FILE_SUFFIX}" = '.sq3' ]; then
-				# Don't add SQLite DB file into Repo DB!
-				continue
-			fi
-			if [ "${FILE_SUFFIX}" != '' ]; then
-				FILE_NOSUFFIX=$(basename "${FILE_BASE}" "${FILE_SUFFIX}")
-				PKG_DESC="${DIR_BASE}/${FILE_NOSUFFIX}.pkgdesc"
-			else
-				PKG_DESC="${DIR_BASE}/${FILE}.pkgdesc"
-			fi
-			#
-			APPL=''
-			VERSION=''
-			CHECKSUM=''
-			MD5SUM_EXT=$(md5sum "${FILE}" | cut -d ' ' -f 1)
-			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
-			# If PKGDESC doesn't exists and FILE is PKG, try to create it.
-			if [ ! -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
-				[ "${FILE_SUFFIX}" = '.txz' ]; then
-				if ! printf "%s" "${FILE_BASE}" | \
-					awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
-					printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}" 2>&1
-				else
-					if ! printf "%s" "${FILE_BASE}" | \
-						awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKG_DESC}"; then
-						printf "ERRO: Failed to create PKGDESC.\n" 1>&2
-						rm -f "${PKG_DESC}"
-					else
-						printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
-					fi
-				fi
-			fi
-			#
-			if [ -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
-				[ "${FILE_SUFFIX}" = '.txz' ]; then
-				APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
-				VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
-				CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | \
-					awk -F ' ' '{ print $2 }')
-				#
-				if grep -e '^CHECKSUM ' "${PKG_DESC}" | grep -q -e 'MD5#' ; then
-					#
-					if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
-						printf "ERRO: MD5 sums do not match.\n" 1>&2
-						continue
-					fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
-				fi # if grep -q -e '^CHECKSUM' ...
-				if [ -z "${APPL}" ]; then
-					printf "ERRO: APPL is empty! Unable to continue.\n" 1>&2
-					continue
-				fi
-				if [ -z "${VERSION}" ]; then
-					VERSION='unknown'
-					printf "WARN: VERSION is empty! Will be set to '%s'!\n" \
-						"${VERSION}" 1>&2
-				fi
-			else
-				# Note: perhaps we want to add eg. README file or such
-				printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
-				APPL=$FILE_BASE
-				VERSION='unknown'
-				CHECKSUM=$MD5SUM_EXT
-			fi # if [ -e "${FILE_BASE}.pkgdesc" ]; then
-			# TODO - check whether previous version of PKG exists in DB.
-			printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
-			sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
-				repo_path, checksum) \
-				VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '${FILE_SUFFIX}', \
-				'${FILE}', '${CHECKSUM}');"
-		else
+		if [ $COUNT -gt 0 ]; then
 			CHECKSUMSQL=$(sqlite3 "${SQL_DB}" "SELECT checksum FROM repo WHERE \
 				repo_path = '${FILE}';")
 			if printf "%s" "${CHECKSUMSQL}" | grep -q -e '^MD5#' ; then
@@ -369,7 +290,82 @@ repo_scan() {
 			else
 				printf "ERRO: Checking of other than MD5SUM is not implemented.\n" 1>&2
 			fi
+			continue
+		fi # if [ $COUNT -gt 0 ]; then
+		#
+		FILE_BASE=$(basename "${FILE}")
+		DIR_BASE=$(dirname "${FILE}")
+		#
+		FILE_SUFFIX=$(printf "%s" "${FILE}" | \
+			awk '{ items=split($0, arr, "."); print arr[items]; }')
+		if [ "${FILE_SUFFIX}" != $FILE ]; then
+			FILE_SUFFIX=".${FILE_SUFFIX}"
 		fi
+		if [ "${FILE_SUFFIX}" = '.sq3' ]; then
+			# Don't add SQLite DB file into Repo DB!
+			continue
+		fi
+		PKG_DESC="${DIR_BASE}/${FILE}.pkgdesc"
+		if [ "${FILE_SUFFIX}" != '' ]; then
+			FILE_NOSUFFIX=$(basename "${FILE_BASE}" "${FILE_SUFFIX}")
+			PKG_DESC="${DIR_BASE}/${FILE_NOSUFFIX}.pkgdesc"
+		fi
+		#
+		APPL=''
+		VERSION=''
+		CHECKSUM=''
+		MD5SUM_EXT=$(md5sum "${FILE}" | cut -d ' ' -f 1)
+		MD5SUM_EXT="MD5#${MD5SUM_EXT}"
+		# If PKGDESC doesn't exists and FILE is PKG, try to create it.
+		if [ ! -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+			[ "${FILE_SUFFIX}" = '.txz' ]; then
+			if ! printf "%s" "${FILE_BASE}" | \
+				awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
+				printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}" 2>&1
+			else
+				if ! printf "%s" "${FILE_BASE}" | \
+					awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKG_DESC}"; then
+					printf "ERRO: Failed to create PKGDESC.\n" 1>&2
+					rm -f "${PKG_DESC}"
+				else
+					printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
+				fi
+			fi
+		fi
+		#
+		if [ -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+			[ "${FILE_SUFFIX}" = '.txz' ]; then
+			APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F' ' '{ print $2 }')
+			VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F' ' '{ print $2 }')
+			CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | \
+				awk -F' ' '{ print $2 }')
+			#
+			if [ "${CHECKSUM}" != '' ] && [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
+				printf "ERRO: MD5 sums do not match.\n" 1>&2
+				continue
+			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
+			if [ -z "${APPL}" ]; then
+				printf "ERRO: APPL is empty! Unable to continue.\n" 1>&2
+				continue
+			fi
+			if [ -z "${VERSION}" ]; then
+				VERSION='unknown'
+				printf "WARN: VERSION is empty! Will be set to '%s'!\n" \
+					"${VERSION}" 1>&2
+			fi
+		else
+			# Note: perhaps we want to add eg. README file or such
+			printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
+			APPL=$FILE_BASE
+			VERSION='unknown'
+			CHECKSUM=$MD5SUM_EXT
+		fi # if [ -e "${FILE_BASE}.pkgdesc" ]; then
+		# TODO - check whether previous version of PKG exists in DB.
+		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
+		sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
+			repo_path, checksum) \
+			VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '${FILE_SUFFIX}', \
+			'${FILE}', '${CHECKSUM}');"
 	done # for FILE
 	# TODO - sync CHECKSUMS MD5 file here
 #	sqlite3 "${SQL_DB}" \
