@@ -269,6 +269,28 @@ repo_scan() {
 		return 1
 	fi # if [ ! -d "${REPO_DIR}/${SLACKVER}" ]
 	cd "${REPO_DIR}/${SLACKVER}"
+	# Note: check whether files in DB still exist in REPO and check their MD5s'
+	for LINE in $(sqlite3 "${SQL_DB}" "SELECT checksum, repo_path FROM \
+		repo;"); do
+		#
+		CHECKSUM=$(printf "%s" "${LINE}" | awk -F'|' '{ print $1 }')
+		FILE=$(printf "%s" "${LINE}" | awk -F'|' '{ print $2 }')
+		if [ ! -e "./${FILE}" ]; then
+			printf "INFO: File '%s' doesn't seem to exist anymore.\n" "${FILE}"
+			sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE repo_path = '${FILE}' AND \
+				checksum = '${CHECKSUM}';"
+			continue
+		fi
+		if ! printf "%s" "${CHECKSUM}" | grep -q -e '^MD5#' ; then
+			printf "ERRO: Only checking of MD5 is implemented.\n" 1>&2
+			continue
+		fi
+		MD5SUM_EXT=$(md5sum "./${FILE}" | cut -d ' ' -f 1)
+		MD5SUM_EXT="MD5#${MD5SUM_EXT}"
+		if [ "${CHECKSUM}" != $MD5SUM_EXT ]; then
+			printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
+		fi
+	done # for LINE
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
 	for FILE in $(find ./ ! -type d | cut -d '/' -f 2-); do
 		printf "INFO: File '%s'.\n" "${FILE}"
@@ -276,22 +298,21 @@ repo_scan() {
 			continue
 		fi
 		#
-		COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(*) FROM repo WHERE \
+		CHECKSUMSQL=$(sqlite3 "${SQL_DB}" "SELECT checksum FROM repo WHERE \
 			repo_path = '${FILE}';")
-		if [ $COUNT -gt 0 ]; then
-			CHECKSUMSQL=$(sqlite3 "${SQL_DB}" "SELECT checksum FROM repo WHERE \
-				repo_path = '${FILE}';")
-			if printf "%s" "${CHECKSUMSQL}" | grep -q -e '^MD5#' ; then
-				MD5SUM=$(md5sum "${FILE}" | cut -d ' ' -f 1)
-				MD5SUM="MD5#$MD5SUM"
-				if [ $CHECKSUMSQL != $MD5SUM ]; then
-					printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
-				fi
-			else
+		# Note: checking of MD5 bellow is duplicite and, perhaps, should be removed
+		if [ "${CHECKSUMSQL}" != '' ]; then
+			if ! printf "%s" "${CHECKSUMSQL}" | grep -q -e '^MD5#' ; then
 				printf "ERRO: Checking of other than MD5SUM is not implemented.\n" 1>&2
+				continue
+			fi
+			MD5SUM=$(md5sum "${FILE}" | cut -d ' ' -f 1)
+			MD5SUM="MD5#$MD5SUM"
+			if [ "${CHECKSUMSQL}" != $MD5SUM ]; then
+				printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
 			fi
 			continue
-		fi # if [ $COUNT -gt 0 ]; then
+		fi # if [ "${CHECKSUMSQL}" != '' ]; then
 		#
 		FILE_BASE=$(basename "${FILE}")
 		DIR_BASE=$(dirname "${FILE}")
