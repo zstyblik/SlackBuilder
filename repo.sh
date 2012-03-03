@@ -380,7 +380,7 @@ repo_scan() {
 } # repo_scan()
 
 # Desc: remove package from repository
-# REPO_PATH=/mnt/repo/slackware64-13.37/slackware64/xap/wine-1.3.37-x86_64-1alien.txz
+# REPO_PATH=/../slackware64-13.37/slackware64/xap/wine-1.3.37-x86_64-1alien.txz
 # @REPO_PATH: path to file to be removed from Repository
 repo_delete() {
 	REPO_PATH=${1:-''}
