@@ -515,11 +515,11 @@ while getopts fo OPT; do
 			;;
 		\?)
 			echo "Unknown option."
-			show_help
+			print_help
 			exit 1
 			;;
 		\*)
-			show_help
+			print_help
 			exit 1
 		;;
 	esac
@@ -531,12 +531,12 @@ case "${ACTION}" in
 		ARG3=${3:-''}
 		if [ $# -gt 3 ]; then
 			printf "Too many arguments given.\n" 1>&2
-			show_help
+			print_help
 			exit 1
 		fi
 		if [ -z "${ARG2}" ] || [ -z "${ARG3}" ]; then
 			printf "Missing an argument.\n" 1>&2
-			show_help
+			print_help
 			exit 1
 		fi
 		repo_add "${ARG2}" "${ARG3}"
@@ -546,30 +546,30 @@ case "${ACTION}" in
 		ARG3=${3:-''}
 		if [ $# -gt 2 ]; then
 			printf "Too many arguments given.\n" 1>&2
-			show_help
+			print_help
 			exit 1
 		fi
 		if [ -z "${ARG2}" ]; then
 			printf "Missing an argument.\n" 1>&2
-			show_help
+			print_help
 			exit 1
 		fi
 		repo_delete "${ARG2}"
 		;;
 	'help')
-		show_help
+		print_help
 		;;
 	'scan')
 		repo_scan
 		;;
 	\?)
 		printf "Invalid option - '%s'.\n" "${ACTION}"
-		show_help
+		print_help
 		exit 255
 		;;
 	:)
 		printf "Option '%s' requires argument.\n" "${ACTION}"
-		show_help
+		print_help
 		exit 255
 		;;
 	*)
