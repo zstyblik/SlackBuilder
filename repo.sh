@@ -104,7 +104,7 @@ Usage:
   % $0 add <PATH_TO_PKG> <IN_REPOSITORY_PATH> ;
   % $0 delete <PATH_TO_FILE_TO_REMOVE> ;
   % $0 help ;
-	% $0 scan ;
+  % $0 scan ;
 
 Options:
   * -f	force
@@ -113,7 +113,7 @@ Options:
 Examples:
   % $0 add repo-stage/k/kernel-huge-x.y.z-x86_64-1.txz slackware64/k/ ;
   % $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz ;
-	% $0 scan ;
+  % $0 scan ;
 
 HELP
 
