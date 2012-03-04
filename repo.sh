@@ -389,6 +389,21 @@ repo_scan() {
 			VERSION='unknown'
 			CHECKSUM=$MD5SUM_EXT
 		fi # if [ -e "${PKG_DESC}" ] ...
+		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
+			WHERE appl = '${APPL}' AND repo_path LIKE '${DIR_BASE}%' AND \
+			version IS NOT '${VERSION}';"); do
+			#
+			if [ -z "${LINE}" ] || printf "%s" "${LINE}" | \
+				grep -E -e '^[\.\/]+$' ; then
+				#
+				continue
+			fi # if [ -z "${LINE}" ] ...
+			printf "INFO: Removing '%s' which seems to be previous version.\n" \
+				"${LINE}"
+			sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' AND \
+				repo_path = '${LINE}' AND version IS NOT '${VERSION}';"
+			rm "${REPO_DIR}/${SLACKVER}/${LINE}"
+		done # for LINE in ...
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 		sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 			repo_path, checksum) \
