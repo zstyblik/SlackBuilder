@@ -387,7 +387,6 @@ repo_scan() {
 			VERSION='unknown'
 			CHECKSUM=$MD5SUM_EXT
 		fi # if [ -e "${PKG_DESC}" ] ...
-		# TODO - check whether previous version of PKG exists in DB.
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 		sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 			repo_path, checksum) \
