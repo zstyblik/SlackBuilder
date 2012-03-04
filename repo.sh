@@ -108,6 +108,7 @@ Usage:
 
 Options:
   * -f	force
+  * -k	keep duplicite files/packages in Repository
   * -o	remove original copy of package added into repository
 
 Examples:
@@ -384,26 +385,28 @@ repo_scan() {
 			fi # if [ -z "${VERSION}" ]; then
 		else
 			# Note: perhaps we want to add eg. README file or such
-			printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
+			printf "INFO: PKGDESC file not found, doesn't mean error.\n"
 			APPL=$FILE_BASE
 			VERSION='unknown'
 			CHECKSUM=$MD5SUM_EXT
 		fi # if [ -e "${PKG_DESC}" ] ...
-		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
-			WHERE appl = '${APPL}' AND repo_path LIKE '${DIR_BASE}%' AND \
-			version IS NOT '${VERSION}';"); do
-			#
-			if [ -z "${LINE}" ] || printf "%s" "${LINE}" | \
-				grep -E -e '^[\.\/]+$' ; then
+		if [ $RM_PREV_PKG -eq 1 ]; then
+			for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
+				WHERE appl = '${APPL}' AND repo_path LIKE '${DIR_BASE}%' AND \
+				version IS NOT '${VERSION}';"); do
 				#
-				continue
-			fi # if [ -z "${LINE}" ] ...
-			printf "INFO: Removing '%s' which seems to be previous version.\n" \
-				"${LINE}"
-			sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' AND \
-				repo_path = '${LINE}' AND version IS NOT '${VERSION}';"
-			rm "${REPO_DIR}/${SLACKVER}/${LINE}"
-		done # for LINE in ...
+				if [ -z "${LINE}" ] || printf "%s" "${LINE}" | \
+					grep -E -e '^[\.\/]+$' ; then
+					#
+					continue
+				fi # if [ -z "${LINE}" ] ...
+				printf "INFO: Removing '%s' which seems to be previous version.\n" \
+					"${LINE}"
+				sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' AND \
+					repo_path = '${LINE}' AND version IS NOT '${VERSION}';"
+				rm "${REPO_DIR}/${SLACKVER}/${LINE}"
+			done # for LINE in ...
+		fi # if [ $RM_PREV_PKG -eq 1 ]
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 		sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
 			repo_path, checksum) \
@@ -531,6 +534,9 @@ while getopts fo OPT; do
 	case "${OPT}" in
 		'f')
 			FORCE=1
+			;;
+		'k')
+			RM_PREV_PKG=0
 			;;
 		'o')
 			RM_ORG_PKG=1
