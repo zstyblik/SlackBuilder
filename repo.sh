@@ -279,6 +279,7 @@ repo_scan() {
 	fi # if [ ! -d "${REPO_DIR}/${SLACKVER}" ]
 	cd "${REPO_DIR}/${SLACKVER}"
 	# Note: check whether files in DB still exist in REPO and check their MD5s'
+	printf "INFO: Checking integrity DB -> Repo. This may take a while.\n"
 	for LINE in $(sqlite3 "${SQL_DB}" "SELECT checksum, repo_path FROM \
 		repo;"); do
 		#
