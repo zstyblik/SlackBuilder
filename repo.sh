@@ -195,7 +195,7 @@ repo_add() {
 		fi # if [ -z "${VERSION}" ]; then
 	else
 		# Note: perhaps we want to add eg. README file or such
-		printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
+		printf "INFO: PKGDESC file not found, doesn't mean error.\n"
 		APPL=$PKG_BASENAME
 		VERSION='unknown'
 		CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
@@ -223,7 +223,7 @@ repo_add() {
 				grep -E -e '^[\.\/]+$' ; then
 				#
 				continue
-			fi
+			fi # if [ -z "${LINE}" ] ...
 			printf "INFO: Removing '%s' which seems to be previous version.\n" \
 				"${LINE}"
 			rm "${REPO_DIR}/${SLACKVER}/${LINE}"
