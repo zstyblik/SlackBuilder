@@ -401,11 +401,8 @@ repo_scan() {
 					#
 					continue
 				fi # if [ -z "${LINE}" ] ...
-				printf "INFO: Removing '%s' which seems to be previous version.\n" \
-					"${LINE}"
-				sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' AND \
-					repo_path = '${LINE}' AND version IS NOT '${VERSION}';"
-				rm "${REPO_DIR}/${SLACKVER}/${LINE}"
+				printf "WARN: File is duplicate(another version) of '%s'.\n" \
+					"${LINE}" 1>&2
 			done # for LINE in ...
 		fi # if [ $RM_PREV_PKG -eq 1 ]
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
