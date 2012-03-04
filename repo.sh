@@ -226,6 +226,8 @@ repo_add() {
 			fi # if [ -z "${LINE}" ] ...
 			printf "INFO: Removing '%s' which seems to be previous version.\n" \
 				"${LINE}"
+			sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' AND \
+				repo_path = '${LINE}' AND version IS NOT '${VERSION}';"
 			rm "${REPO_DIR}/${SLACKVER}/${LINE}"
 		done # for LINE in ...
 	else
