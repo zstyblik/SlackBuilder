@@ -165,7 +165,7 @@ repo_add() {
 			printf "repo_add(): Unable to create directory '%s'.\n" \
 				"${TARGET_DIR}" 1>&2
 			return 1
-		fi
+		fi # if ! mkdir ...
 	fi # if [ ! -d "${TARGET_DIR}" ]; then
 	#
 	APPL=''
@@ -188,11 +188,11 @@ repo_add() {
 		if [ -z "${APPL}" ]; then
 			printf "ERRO: APPL is empty! Unable to continue.\n"
 			return 1
-		fi
+		fi # if [ -z "${APPL}" ]; then
 		if [ -z "${VERSION}" ]; then
 			VERSION='unknown'
 			printf "WARN: VERSION is empty! Will be set to '%s'!\n" "${VERSION}"
-		fi
+		fi # if [ -z "${VERSION}" ]; then
 	else
 		# Note: perhaps we want to add eg. README file or such
 		printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
@@ -222,14 +222,14 @@ repo_add() {
 			repo_path LIKE '${SQL_REPO_PATH_PART}%';"); do
 			# foo
 			true
-		done
+		done # for LINE in ...
 		printf "WARN: Not Implemented\n"
 	else
 		if [ $CONFL_COUNT -gt 0 ]; then
 			printf "INFO: %i conflicting package(s) ignored.\n"\
 				$CONFL_COUNT
 		fi
-	fi
+	fi # if [ $RM_PREV_PKG -eq 1 ] ...
 	if [ -e "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}" ]; then
 		# No duplicates in repo and DB, amigo.
 		rm -f "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}"
@@ -242,7 +242,7 @@ repo_add() {
 	'${SQL_REPO_PATH}', '${CHECKSUM}');"
 	if [ ! -d "${TARGET_DIR}" ]; then
 		mkdir -p "${TARGET_DIR}"
-	fi
+	fi # if [ ! -d "${TARGET_DIR}" ]
 	cp "${FILE_TO_ADD}" "${TARGET_DIR}/"
 	# Note: remove "original" we've just added into repository
 	if [ ${RM_ORG_PKG} -eq 1 ]; then
@@ -352,9 +352,9 @@ repo_scan() {
 					rm -f "${PKG_DESC}"
 				else
 					printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
-				fi
-			fi
-		fi
+				fi # if ! printf "%s" "${FILE_BASE}" | ...
+			fi # if ! printf "%s" "${FILE_BASE}" |...
+		fi # if [ ! -e "${PKG_DESC}" ] && ...
 		#
 		if [ -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
 			[ "${FILE_SUFFIX}" = '.txz' ]; then
@@ -370,19 +370,19 @@ repo_scan() {
 			if [ -z "${APPL}" ]; then
 				printf "ERRO: APPL is empty! Unable to continue.\n" 1>&2
 				continue
-			fi
+			fi # if [ -z "${APPL}" ]; then
 			if [ -z "${VERSION}" ]; then
 				VERSION='unknown'
 				printf "WARN: VERSION is empty! Will be set to '%s'!\n" \
 					"${VERSION}" 1>&2
-			fi
+			fi # if [ -z "${VERSION}" ]; then
 		else
 			# Note: perhaps we want to add eg. README file or such
 			printf "WARN: File '%s' doesn't exist.\n" "${PKG_DESC}" 1>&2
 			APPL=$FILE_BASE
 			VERSION='unknown'
 			CHECKSUM=$MD5SUM_EXT
-		fi # if [ -e "${FILE_BASE}.pkgdesc" ]; then
+		fi # if [ -e "${PKG_DESC}" ] ...
 		# TODO - check whether previous version of PKG exists in DB.
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
 		sqlite3 "${SQL_DB}" "INSERT INTO repo (appl, version, name, suffix, \
@@ -437,7 +437,7 @@ repo_delete() {
 	if [ "${PKGFOUND_COUNT}" != "1" ] && [ $FORCE -eq 0 ]; then
 		if [ "${PKGFOUND_COUNT}" == "0" ]; then
 			printf "repo_delete(): Package not found in DB.\n" 1>&2
-		fi
+		fi # if [ "${PKGFOUND_COUNT}" == "0" ]; then 
 		printf "repo_delete(): PKGs found %s, expected 1.\n" \
 			"${PKGFOUND_COUNT}" 1>&2
 		printf "repo_delete(): Perhaps you want to use force.\n" 1>&2
@@ -455,7 +455,7 @@ repo_delete() {
 		fi
 		printf "INFO: move '%s' to '%s'.\n" "${TARGET_DIR}.${SUFFIX}" "${TMP}"
 		mv "${TARGET_DIR}.${SUFFIX}" "${TMP}/"
-	done
+	done # for SUFFIX in ...
 	# delete PACKAGE from database
 	printf "INFO: delete package from SQLite DB.\n"
 	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASENAME}' AND \
