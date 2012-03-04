@@ -215,15 +215,19 @@ repo_add() {
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
 		appl = '${APPL}' AND repo_path LIKE '${SQL_REPO_PATH_PART}%';")
 	if [ $RM_PREV_PKG -eq 1 ] && [ "${CONFL_COUNT}" != "0" ]; then
-		# TODO - remove previous versions of package and so on
-		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path,\
-			name, suffix \
-			FROM repo WHERE appl = '${APPL}' AND \
-			repo_path LIKE '${SQL_REPO_PATH_PART}%';"); do
-			# foo
-			true
+		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
+			WHERE appl = '${APPL}' AND repo_path LIKE '${SQL_REPO_PATH_PART}%' AND \
+			version IS NOT '${VERSION}';"); do
+			#
+			if [ -z "${LINE}" ] || printf "%s" "${LINE}" | \
+				grep -E -e '^[\.\/]+$' ; then
+				#
+				continue
+			fi
+			printf "INFO: Removing '%s' which seems to be previous version.\n" \
+				"${LINE}"
+			rm "${REPO_DIR}/${SLACKVER}/${LINE}"
 		done # for LINE in ...
-		printf "WARN: Not Implemented\n"
 	else
 		if [ $CONFL_COUNT -gt 0 ]; then
 			printf "INFO: %i conflicting package(s) ignored.\n"\
