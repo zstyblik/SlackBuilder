@@ -216,7 +216,7 @@ repo_add() {
 	CONFL_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
 		appl = '${APPL}' AND repo_path LIKE '${SQL_REPO_PATH_PART}%';")
 	if [ $RM_PREV_PKG -eq 1 ] && [ "${CONFL_COUNT}" != "0" ]; then
-		for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
+		for LINE in $(sqlite3 "${SQL_DB}" "SELECT repo_path FROM repo \
 			WHERE appl = '${APPL}' AND repo_path LIKE '${SQL_REPO_PATH_PART}%' AND \
 			version IS NOT '${VERSION}';"); do
 			#
@@ -392,7 +392,7 @@ repo_scan() {
 			CHECKSUM=$MD5SUM_EXT
 		fi # if [ -e "${PKG_DESC}" ] ...
 		if [ $RM_PREV_PKG -eq 1 ]; then
-			for LINE in $(sqlite3 -line "${SQL_DB}" "SELECT repo_path FROM repo \
+			for LINE in $(sqlite3 "${SQL_DB}" "SELECT repo_path FROM repo \
 				WHERE appl = '${APPL}' AND repo_path LIKE '${DIR_BASE}%' AND \
 				version IS NOT '${VERSION}';"); do
 				#
