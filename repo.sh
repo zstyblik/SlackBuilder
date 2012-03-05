@@ -298,7 +298,7 @@ repo_scan() {
 		MD5SUM_EXT=$(md5sum "./${FILE}" | cut -d ' ' -f 1)
 		MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 		if [ "${CHECKSUM}" != $MD5SUM_EXT ]; then
-			printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
+			printf "WARN: Checksum for '%s' differs!\n" "${FILE}"
 		fi
 	done # for LINE
 	# More like % find ./ ; or % find ./ -name '*.t?z'; and check SQLite for infos
@@ -319,7 +319,7 @@ repo_scan() {
 			MD5SUM=$(md5sum "${FILE}" | cut -d ' ' -f 1)
 			MD5SUM="MD5#$MD5SUM"
 			if [ "${CHECKSUMSQL}" != $MD5SUM ]; then
-				printf "WARN: Checksum for '%s' differs!\n" "${FILE}" 1>&2
+				printf "WARN: Checksum for '%s' differs!\n" "${FILE}"
 			fi
 			continue
 		fi # if [ "${CHECKSUMSQL}" != '' ]; then
@@ -352,7 +352,7 @@ repo_scan() {
 			[ "${FILE_SUFFIX}" = '.txz' ]; then
 			if ! printf "%s" "${FILE_BASE}" | \
 				awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
-				printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}" 2>&1
+				printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}"
 			else
 				if ! printf "%s" "${FILE_BASE}" | \
 					awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKG_DESC}"; then
@@ -382,7 +382,7 @@ repo_scan() {
 			if [ -z "${VERSION}" ]; then
 				VERSION='unknown'
 				printf "WARN: VERSION is empty! Will be set to '%s'!\n" \
-					"${VERSION}" 1>&2
+					"${VERSION}"
 			fi # if [ -z "${VERSION}" ]; then
 		else
 			# Note: perhaps we want to add eg. README file or such
@@ -402,7 +402,7 @@ repo_scan() {
 					continue
 				fi # if [ -z "${LINE}" ] ...
 				printf "WARN: File is duplicate(another version) of '%s'.\n" \
-					"${LINE}" 1>&2
+					"${LINE}"
 			done # for LINE in ...
 		fi # if [ $RM_PREV_PKG -eq 1 ]
 		printf "INFO: File '%s' will be added into DB.\n" "${FILE}"
