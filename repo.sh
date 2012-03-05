@@ -187,7 +187,7 @@ repo_add() {
 			fi # if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 		fi # if grep -q -e '^CHECKSUM' ...
 		if [ -z "${APPL}" ]; then
-			printf "ERRO: APPL is empty! Unable to continue.\n"
+			printf "ERRO: APPL is empty! Unable to continue.\n" 1>&2
 			return 1
 		fi # if [ -z "${APPL}" ]; then
 		if [ -z "${VERSION}" ]; then
@@ -204,7 +204,7 @@ repo_add() {
 	fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
 
 	if [ -z "${CHECKSUM}" ]; then
-		printf "ERRO: CHECKSUM is empty! Unable to continue.\n"
+		printf "ERRO: CHECKSUM is empty! Unable to continue.\n" 1>&2
 		return 1
 	fi
 
