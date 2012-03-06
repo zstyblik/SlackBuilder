@@ -105,6 +105,7 @@ Usage:
   % $0 delete <PATH_TO_FILE_TO_REMOVE> ;
   % $0 help ;
   % $0 scan ;
+  % $0 sync ;
 
 Options:
   * -f	force
@@ -411,11 +412,7 @@ repo_scan() {
 			VALUES ('${APPL}', '${VERSION}', '${FILE_BASE}', '${FILE_SUFFIX}', \
 			'${FILE}', '${CHECKSUM}');"
 	done # for FILE
-	# TODO - sync CHECKSUMS MD5 file here
-#	sqlite3 "${SQL_DB}" \
-#		"SELECT checksum, repo_path FROM repo ORDER BY repo_path;" | \
-#		awk -F'|' '{ printf("%s\t./%s\n", $1, $2); }' | \
-#		sed 's@^MD5#@@' > "${CHECKSUMS_PATH}/CHECKSUMS.md5"
+	repo_sync
 	return 0
 } # repo_scan()
 
@@ -486,6 +483,20 @@ repo_delete() {
 	rm -rf "${TMP}"
 	return 0
 } # repo_delete()
+
+# Desc: sync DB->CHECKSUMS.md5 file
+repo_sync() {
+	if [ ! -d "${REPO_DIR}/${SLACKVER}" ]; then
+		printf "ERRO: Repo directory '%s/%s' doesn't exist.\n" "${REPO_DIR}" \
+			"${SLACKVER}" 1>&2
+		return 1
+	fi # if [ ! -d "${REPO_DIR}/${SLACKVER}" ]
+	sqlite3 "${SQL_DB}" \
+		"SELECT checksum, repo_path FROM repo ORDER BY repo_path;" | \
+		awk -F'|' '{ printf("%s\t./%s\n", $1, $2); }' | \
+		sed 's@^MD5#@@' > "${CHECKSUMS_PATH}/CHECKSUMS.md5"
+	return 0
+} # repo_sync()
 
 # Desc: check whether SQLite DB file exists
 # @returns: True(0) if exists, otherwise False(1)
@@ -587,6 +598,9 @@ case "${ACTION}" in
 		;;
 	'scan')
 		repo_scan
+		;;
+	'sync')
+		repo_sync
 		;;
 	\?)
 		printf "Invalid option - '%s'.\n" "${ACTION}"
