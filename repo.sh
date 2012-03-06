@@ -294,7 +294,7 @@ repo_delete() {
 			REPO_PATH="/"
 		fi # if [ ! -z "${REPO_PATH}" ]; then
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
-	if [ ! -f "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
+	if [ ! -f "${TARGET_DIR}${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
 			"${TARGET_DIR}${PKG_SUFFIX}" 1>&2
 		return 1
