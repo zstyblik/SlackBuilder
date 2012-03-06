@@ -494,7 +494,7 @@ repo_sync() {
 	sqlite3 "${SQL_DB}" \
 		"SELECT checksum, repo_path FROM repo ORDER BY repo_path;" | \
 		awk -F'|' '{ printf("%s\t./%s\n", $1, $2); }' | \
-		sed 's@^MD5#@@' > "${CHECKSUMS_PATH}/CHECKSUMS.md5"
+		sed 's@^MD5#@@' > "${REPO_DIR}/${SLACKVER}/CHECKSUMS.md5"
 	return 0
 } # repo_sync()
 
