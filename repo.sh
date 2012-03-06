@@ -261,6 +261,74 @@ repo_add() {
 	return 0
 } # repo_add()
 
+# Desc: remove package from repository
+# REPO_PATH=/../slackware64-13.37/slackware64/xap/wine-1.3.37-x86_64-1alien.txz
+# @REPO_PATH: path to file to be removed from Repository
+repo_delete() {
+	REPO_PATH=${1:-''}
+	if [ -z "${REPO_PATH}" ]; then
+		printf "repo_delete(): PKG_PATH '%s' is empty.\n" "${REPO_PATH}" 1>&2
+		return 1
+	fi # if [ -z "${REPO_PATH}" ]
+	#
+	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
+	PKG_BASENAME=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
+	PKG_BASEDIR=$(dirname "${REPO_PATH}")
+	#
+	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASENAME}"
+	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
+		# Full-path given
+		TARGET_DIR="${PKG_BASEDIR}/${PKG_BASENAME}"
+		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
+		REPO_DIR_EXT=$(pwd)
+		popd >/dev/null
+		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
+			"${REPO_DIR_EXT}/")
+		if [ -z "${REPO_PATH}" ]; then
+			REPO_PATH="/"
+		fi # if [ ! -z "${REPO_PATH}" ]; then
+	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
+	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
+		printf "repo_delete(): File '%s' doesn't not exist.\n" \
+			"${TARGET_DIR}${PKG_SUFFIX}" 1>&2
+		return 1
+	fi
+	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
+		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
+	PKGFOUND_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
+		repo_path = '${SQL_REPO_PATH}';")
+	if [ "${PKGFOUND_COUNT}" != "1" ] && [ $FORCE -eq 0 ]; then
+		if [ "${PKGFOUND_COUNT}" == "0" ]; then
+			printf "repo_delete(): Package not found in DB.\n" 1>&2
+		fi # if [ "${PKGFOUND_COUNT}" == "0" ]; then 
+		printf "repo_delete(): PKGs found %s, expected 1.\n" \
+			"${PKGFOUND_COUNT}" 1>&2
+		printf "repo_delete(): Perhaps you want to use force.\n" 1>&2
+		return 1
+	fi
+	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
+	if [ -z "${TMP}" ]; then
+		printf "repo_delete(): Failed to create temporary directory.\n" 1>&2
+		return 1
+	fi
+	# move PACKAGE and all associated files to TMP directory
+	for SUFFIX in tgz txz txt asc md5; do
+		if [ ! -e "${TARGET_DIR}.${SUFFIX}" ]; then
+			continue
+		fi
+		printf "INFO: move '%s' to '%s'.\n" "${TARGET_DIR}.${SUFFIX}" "${TMP}"
+		mv "${TARGET_DIR}.${SUFFIX}" "${TMP}/"
+	done # for SUFFIX in ...
+	# delete PACKAGE from database
+	printf "INFO: delete package from SQLite DB.\n"
+	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASENAME}' AND \
+		repo_path = '${SQL_REPO_PATH}';"
+	# remote TMP directory
+	printf "INFO: clean-up.\n"
+	rm -rf "${TMP}"
+	return 0
+} # repo_delete()
+
 # Desc: More like a hack how to get repository up and running quickly including
 # dist-version of packages mixed with "home-brew".
 # * cd REPO_DIR
@@ -415,74 +483,6 @@ repo_scan() {
 	repo_sync
 	return 0
 } # repo_scan()
-
-# Desc: remove package from repository
-# REPO_PATH=/../slackware64-13.37/slackware64/xap/wine-1.3.37-x86_64-1alien.txz
-# @REPO_PATH: path to file to be removed from Repository
-repo_delete() {
-	REPO_PATH=${1:-''}
-	if [ -z "${REPO_PATH}" ]; then
-		printf "repo_delete(): PKG_PATH '%s' is empty.\n" "${REPO_PATH}" 1>&2
-		return 1
-	fi # if [ -z "${REPO_PATH}" ]
-	#
-	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
-	PKG_BASENAME=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
-	PKG_BASEDIR=$(dirname "${REPO_PATH}")
-	#
-	TARGET_DIR="${REPO_DIR}/${SLACKVER}/${PKG_BASEDIR}/${PKG_BASENAME}"
-	if printf "%s" "${REPO_PATH}" | grep -q -e '^/' ; then
-		# Full-path given
-		TARGET_DIR="${PKG_BASEDIR}/${PKG_BASENAME}"
-		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
-		REPO_DIR_EXT=$(pwd)
-		popd >/dev/null
-		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
-			"${REPO_DIR_EXT}/")
-		if [ -z "${REPO_PATH}" ]; then
-			REPO_PATH="/"
-		fi # if [ ! -z "${REPO_PATH}" ]; then
-	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
-	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
-		printf "repo_delete(): File '%s' doesn't not exist.\n" \
-			"${TARGET_DIR}${PKG_SUFFIX}" 1>&2
-		return 1
-	fi
-	SQL_REPO_PATH=$(printf "%s/%s%s" "${REPO_PATH}" "${PKG_BASENAME}" \
-		"${PKG_SUFFIX}" | sed -r -e 's@/+@/@g')
-	PKGFOUND_COUNT=$(sqlite3 "${SQL_DB}" "SELECT COUNT(appl) FROM repo WHERE \
-		repo_path = '${SQL_REPO_PATH}';")
-	if [ "${PKGFOUND_COUNT}" != "1" ] && [ $FORCE -eq 0 ]; then
-		if [ "${PKGFOUND_COUNT}" == "0" ]; then
-			printf "repo_delete(): Package not found in DB.\n" 1>&2
-		fi # if [ "${PKGFOUND_COUNT}" == "0" ]; then 
-		printf "repo_delete(): PKGs found %s, expected 1.\n" \
-			"${PKGFOUND_COUNT}" 1>&2
-		printf "repo_delete(): Perhaps you want to use force.\n" 1>&2
-		return 1
-	fi
-	TMP=$(mktemp -q -p "${TMP_PREFIX}" -d || true)
-	if [ -z "${TMP}" ]; then
-		printf "repo_delete(): Failed to create temporary directory.\n" 1>&2
-		return 1
-	fi
-	# move PACKAGE and all associated files to TMP directory
-	for SUFFIX in tgz txz txt asc md5; do
-		if [ ! -e "${TARGET_DIR}.${SUFFIX}" ]; then
-			continue
-		fi
-		printf "INFO: move '%s' to '%s'.\n" "${TARGET_DIR}.${SUFFIX}" "${TMP}"
-		mv "${TARGET_DIR}.${SUFFIX}" "${TMP}/"
-	done # for SUFFIX in ...
-	# delete PACKAGE from database
-	printf "INFO: delete package from SQLite DB.\n"
-	sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE name = '${PKG_BASENAME}' AND \
-		repo_path = '${SQL_REPO_PATH}';"
-	# remote TMP directory
-	printf "INFO: clean-up.\n"
-	rm -rf "${TMP}"
-	return 0
-} # repo_delete()
 
 # Desc: sync DB->CHECKSUMS.md5 file
 repo_sync() {
