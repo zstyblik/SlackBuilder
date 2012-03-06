@@ -275,6 +275,7 @@ repo_delete() {
 		printf "repo_delete(): File '%s' either doesn't exist or "\
 			"isn't a regular file.\n" "${REPO_PATH}" 1>&2
 		return 1
+	fi
 	#
 	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
 	PKG_BASENAME=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
