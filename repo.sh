@@ -137,8 +137,9 @@ repo_add() {
 		printf "repo_add(): Either PACKAGE or INREPO_PATH is empty.\n" 1>&2
 		return 1
 	fi
-	if [ ! -e "${FILE_TO_ADD}" ]; then
-		printf "repo_add(): File '%s' doesn't exist.\n" "${FILE_TO_ADD}" 1>&2
+	if [ ! -f "${FILE_TO_ADD}" ]; then
+		printf "repo_add(): File '%s' either doesn't exist or "\
+			"isn't a regular file.\n"\ "${FILE_TO_ADD}" 1>&2
 		return 1
 	fi
 	#
@@ -238,7 +239,7 @@ repo_add() {
 				$CONFL_COUNT
 		fi
 	fi # if [ $RM_PREV_PKG -eq 1 ] ...
-	if [ -e "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}" ]; then
+	if [ -f "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}" ]; then
 		# No duplicates in repo and DB, amigo.
 		rm -f "${TARGET_DIR}/${PKG_BASENAME}${PKG_SUFFIX}"
 		sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE appl = '${APPL}' \
@@ -270,6 +271,10 @@ repo_delete() {
 		printf "repo_delete(): PKG_PATH '%s' is empty.\n" "${REPO_PATH}" 1>&2
 		return 1
 	fi # if [ -z "${REPO_PATH}" ]
+	if [ ! -f "${REPO_PATH}" ]; then
+		printf "repo_delete(): File '%s' either doesn't exist or "\
+			"isn't a regular file.\n" "${REPO_PATH}" 1>&2
+		return 1
 	#
 	PKG_SUFFIX=$(get_pkg_suffix "${REPO_PATH}")
 	PKG_BASENAME=$(basename "${REPO_PATH}" "${PKG_SUFFIX}")
@@ -288,7 +293,7 @@ repo_delete() {
 			REPO_PATH="/"
 		fi # if [ ! -z "${REPO_PATH}" ]; then
 	fi # if printf "%s" "${REPO_PATH}" | grep -q -e '^/'
-	if [ -e "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
+	if [ ! -f "${TARGET_DIR}.${PKG_SUFFIX}" ]; then
 		printf "repo_delete(): File '%s' doesn't not exist.\n" \
 			"${TARGET_DIR}${PKG_SUFFIX}" 1>&2
 		return 1
@@ -313,7 +318,7 @@ repo_delete() {
 	fi
 	# move PACKAGE and all associated files to TMP directory
 	for SUFFIX in tgz txz txt asc md5; do
-		if [ ! -e "${TARGET_DIR}.${SUFFIX}" ]; then
+		if [ ! -f "${TARGET_DIR}.${SUFFIX}" ]; then
 			continue
 		fi
 		printf "INFO: move '%s' to '%s'.\n" "${TARGET_DIR}.${SUFFIX}" "${TMP}"
@@ -354,7 +359,7 @@ repo_scan() {
 		#
 		CHECKSUM=$(printf "%s" "${LINE}" | awk -F'|' '{ print $1 }')
 		FILE=$(printf "%s" "${LINE}" | awk -F'|' '{ print $2 }')
-		if [ ! -e "./${FILE}" ]; then
+		if [ ! -f "./${FILE}" ]; then
 			printf "INFO: File '%s' doesn't seem to exist anymore.\n" "${FILE}"
 			sqlite3 "${SQL_DB}" "DELETE FROM repo WHERE repo_path = '${FILE}' AND \
 				checksum = '${CHECKSUM}';"
@@ -433,7 +438,7 @@ repo_scan() {
 			fi # if ! printf "%s" "${FILE_BASE}" |...
 		fi # if [ ! -e "${PKG_DESC}" ] && ...
 		#
-		if [ -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+		if [ -f "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
 			[ "${FILE_SUFFIX}" = '.txz' ]; then
 			APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F' ' '{ print $2 }')
 			VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F' ' '{ print $2 }')
@@ -501,7 +506,7 @@ repo_sync() {
 # Desc: check whether SQLite DB file exists
 # @returns: True(0) if exists, otherwise False(1)
 sqlite_exists() {
-	if [ ! -e "${SQL_DB}" ]; then
+	if [ ! -f "${SQL_DB}" ]; then
 		return 1
 	fi
 	return 0
