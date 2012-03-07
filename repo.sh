@@ -190,7 +190,7 @@ repo_add() {
 			fi # if ! printf "%s" "${PKG_BASENAME}" | ...
 		fi # if ! printf "%s" "${PKG_BASENAME}" |...
 	fi # if [ ! -f "${PKG_DESC}" ] && ...
-	if [ -e "${PKG_DESC}" ]; then
+	if [ -f "${PKG_DESC}" ]; then
 		APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 		VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 		CHECKSUM=$(grep -e '^CHECKSUM ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
@@ -219,7 +219,7 @@ repo_add() {
 		VERSION='unknown'
 		CHECKSUM=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 		CHECKSUM="MD5#${CHECKSUM}"
-	fi # if [ -e "${PKG_BASENAME}.pkgdesc" ]; then
+	fi # if [ -f "${PKG_DESC" ]; then
 
 	if [ -z "${CHECKSUM}" ]; then
 		printf "ERRO: CHECKSUM is empty! Unable to continue.\n" 1>&2
@@ -439,7 +439,7 @@ repo_scan() {
 		MD5SUM_EXT=$(md5sum "${FILE}" | cut -d ' ' -f 1)
 		MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 		# If PKGDESC doesn't exists and FILE is PKG, try to create it.
-		if [ ! -e "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
+		if [ ! -f "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
 			[ "${FILE_SUFFIX}" = '.txz' ]; then
 			if ! printf "%s" "${FILE_BASE}" | \
 				awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
@@ -453,7 +453,7 @@ repo_scan() {
 					printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
 				fi # if ! printf "%s" "${FILE_BASE}" | ...
 			fi # if ! printf "%s" "${FILE_BASE}" |...
-		fi # if [ ! -e "${PKG_DESC}" ] && ...
+		fi # if [ ! -f "${PKG_DESC}" ] && ...
 		#
 		if [ -f "${PKG_DESC}" ] && [ "${FILE_SUFFIX}" = '.tgz' ] || \
 			[ "${FILE_SUFFIX}" = '.txz' ]; then
@@ -481,7 +481,7 @@ repo_scan() {
 			APPL=$FILE_BASE
 			VERSION='unknown'
 			CHECKSUM=$MD5SUM_EXT
-		fi # if [ -e "${PKG_DESC}" ] ...
+		fi # if [ -f "${PKG_DESC}" ] ...
 		if [ $RM_PREV_PKG -eq 1 ]; then
 			for LINE in $(sqlite3 "${SQL_DB}" "SELECT repo_path FROM repo \
 				WHERE appl = '${APPL}' AND repo_path LIKE '${DIR_BASE}%' AND \
