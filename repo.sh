@@ -174,6 +174,22 @@ repo_add() {
 	APPL=''
 	VERSION=''
 	CHECKSUM=''
+	# If PKGDESC doesn't exists and FILE is PKG, try to create it.
+	if [ ! -f "${PKG_DESC}" ] && [ "${PKG_SUFFIX}" = '.tgz' ] || \
+		[ "${PKG_SUFFIX}" = '.txz' ]; then
+		if ! printf "%s" "${PKG_BASENAME}" | \
+			awk -f "${PREFIX}/include/get-pkg-desc.awk" > /dev/null 2>&1; then
+			printf "WARN: Unable to get PKGDESC from '%s'.\n" "${PKG_DESC}"
+		else
+			if ! printf "%s" "${PKG_BASENAME}" | \
+				awk -f "${PREFIX}/include/get-pkg-desc.awk" > "${PKG_DESC}"; then
+				printf "ERRO: Failed to create PKGDESC.\n" 1>&2
+				rm -f "${PKG_DESC}"
+			else
+				printf "CHECKSUM %s\n" "${MD5SUM_EXT}" >> "${PKG_DESC}"
+			fi # if ! printf "%s" "${PKG_BASENAME}" | ...
+		fi # if ! printf "%s" "${PKG_BASENAME}" |...
+	fi # if [ ! -f "${PKG_DESC}" ] && ...
 	if [ -e "${PKG_DESC}" ]; then
 		APPL=$(grep -e '^APPL ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
 		VERSION=$(grep -e '^VERSION ' "${PKG_DESC}" | awk -F ' ' '{ print $2 }')
