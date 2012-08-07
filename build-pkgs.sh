@@ -68,6 +68,7 @@ buildpkg() {
 	./build.sh || RC=$?
 	if [ $RC -ne 0 ]; then
 		printf "[%s] build.sh has exited with RC %i.\n" "${SBNAME}" $RC
+		printf "[%s] TMP dir '%s'\n" "${SBNAME}" "${TMP}"
 		exit 253
 	fi
 	REPODEST="${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
