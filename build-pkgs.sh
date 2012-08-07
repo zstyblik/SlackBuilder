@@ -22,6 +22,8 @@ export TMP_PREFIX
 export SLACKVER
 export SOURCES
 
+KEEP_TMP=${KEEP_TMP:-0}
+
 # build everything
 buildall() {
 	for CATEGORY in l d k a db ap n tfn; do
@@ -68,7 +70,11 @@ buildpkg() {
 	./build.sh || RC=$?
 	if [ $RC -ne 0 ]; then
 		printf "[%s] build.sh has exited with RC %i.\n" "${SBNAME}" $RC
-		printf "[%s] TMP dir '%s'\n" "${SBNAME}" "${TMP}"
+		if [ $KEEP_TMP!="1" ]; then
+			rm -rf "${TMP}"
+		else
+			printf "[%s] Kept TMP dir '%s'.\n" "${SBNAME}" "${TMP}"
+		fi
 		exit 253
 	fi
 	REPODEST="${REPO_STAGE_DIR}/${SLACKVER}/${CATEGORY}/${SBNAME}/"
