@@ -174,6 +174,7 @@ repo_add() {
 	APPL=''
 	VERSION=''
 	CHECKSUM=''
+	MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 	# If PKGDESC doesn't exists and FILE is PKG, try to create it.
 	if [ ! -f "${PKG_DESC}" ] && [ "${PKG_SUFFIX}" = '.tgz' ] || \
 		[ "${PKG_SUFFIX}" = '.txz' ]; then
@@ -197,7 +198,6 @@ repo_add() {
 		#
 		if grep -e '^CHECKSUM ' "${PKG_DESC}" | grep -q -e 'MD5#' ; then
 			#
-			MD5SUM_EXT=$(md5sum "${FILE_TO_ADD}" | cut -d ' ' -f 1)
 			MD5SUM_EXT="MD5#${MD5SUM_EXT}"
 			if [ "${CHECKSUM}" != "${MD5SUM_EXT}" ]; then
 				printf "ERRO: MD5 sums do not match.\n" 1>&2
