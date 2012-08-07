@@ -95,6 +95,7 @@ buildpkg() {
 	fi
 
 	cd ${PREFIX}
+	rm -rf "${TMP}"
 	unset BUILD
 	unset PKGNAM
 	unset VERSION
