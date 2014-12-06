@@ -6,7 +6,7 @@
 	items = split($0, arr, "-");
 	if (items < 4) {
 		printf("Invalid input '%s'.\n", $0) > "/dev/stderr";
-		exit 1; 
+		exit 1;
 	}
 	build = arr[items];
 	items--;

@@ -167,7 +167,7 @@ if [ ${DOFILELIST} -eq 1 ]; then
 	printf "Generating FILELIST.TXT for './'..."
 	if format_filelist './' ; then
 		printf "[ OK ]\n"
-	else 
+	else
 		printf "[ FAIL ]\n"
 	fi
 
@@ -175,7 +175,7 @@ if [ ${DOFILELIST} -eq 1 ]; then
 	printf "Generating FILELIST.TXT for 'slackware%s'..." "${LIBDIRSUFFIX}"
 	if format_filelist './' ; then
 		printf "[ OK ]\n"
-	else 
+	else
 		printf "[ FAIL ]\n"
 	fi
 	popd

@@ -1,6 +1,6 @@
 #!/bin/sh
 # 2010/07- @ Zdenek Styblik
-# 
+#
 # Desc: build packages out of SlackBuilds and place them into bare repo
 # directory
 #
@@ -54,7 +54,7 @@ buildpkg() {
 
 	export SBDIR="$SBO_DIR/$CATEGORY/${SBNAME}"
 	export DISTPKG="${SLACK_MIRROR}/source/${CATEGORY}/${SBNAME}"
-	
+
 	if [ ! -x "${SBDIR}/build.sh" ]; then
 		printf "[%s] skipped: build.sh -x.\n" "${SBNAME}"
 		continue

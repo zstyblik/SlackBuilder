@@ -5,7 +5,7 @@
 --  suffix: .txz
 --  repo_path: slackware64/xap/
 --  checksum: MD5#5483e192e6fbdc95c8eaf9ed46d61e70 -> ALGO:HASH
--- 
+--
 -- Package, all versions: repo_path + appl
 -- Package, zero-in: repo_path + name
 -- Package with different suffix is still treated as the same file!
