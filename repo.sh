@@ -12,7 +12,7 @@
 # $0 delete /usr/src/repo/slackware64/k/kernel-huge-x.y.z-x86_64-1.txz
 #
 # ---
-# Package name dissected: 
+# Package name dissected:
 # wine      - 1.3.37  - x86_64 - 1alien
 # appl name - version - arch   - build+author
 #
@@ -36,7 +36,7 @@
 #
 # ---
 # On package signing:
-# 
+#
 # http://allanmcrae.com/2011/12/pacman-package-signing-4-arch-linux/
 #
 # Packages should be signed when added to repo. They can be signed by their
