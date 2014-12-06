@@ -1,4 +1,4 @@
-#!/usr/bin/awk -F
+#!/usr/bin/awk -f
 # 2012/Feb/28 @ Zdenek Styblik
 # Desc: parse-out info from Slackware's package name
 # Example input: kernel-huge-2.6.35.13-x86_64-1
