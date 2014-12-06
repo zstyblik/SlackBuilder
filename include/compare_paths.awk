@@ -4,10 +4,10 @@
 # Presumption is the first argument is a path deep in repository, the
 # second argument is path only to the repository.
 # NOTE: make sure paths end with '/'. After all, they point to directories.
-# Example: 
-# * 1: /usr/src/repo/slackware64-13.37/slackware64/a/ 
-# * 2: /usr/src/repo/slackware64-13.37/
-BEGIN { 
+# Example:
+# $0 /slackware64-13.37/slackware64/a/ /slackware64-13.37/
+# slackware64/a/
+BEGIN {
 	if (ARGC < 3) {
 		exit 1;
 	}
