@@ -157,7 +157,7 @@ repo_add() {
 		REPO_DIR_EXT=$(pwd)
 		popd >/dev/null
 		#
-		INREPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
+		INREPO_PATH=$(awk -f "${PREFIX}/include/compare_paths.awk" "${PKG_BASEDIR}/" \
 			"${REPO_DIR_EXT}/")
 		if [ -z "${INREPO_PATH}" ]; then
 			INREPO_PATH="/"
@@ -304,7 +304,7 @@ repo_delete() {
 		pushd "${REPO_DIR}/${SLACKVER}/" >/dev/null
 		REPO_DIR_EXT=$(pwd)
 		popd >/dev/null
-		REPO_PATH=$(awk -f "${PREFIX}/include/ComparePaths.awk" "${PKG_BASEDIR}/" \
+		REPO_PATH=$(awk -f "${PREFIX}/include/compare_paths.awk" "${PKG_BASEDIR}/" \
 			"${REPO_DIR_EXT}/")
 		if [ -z "${REPO_PATH}" ]; then
 			REPO_PATH="/"
