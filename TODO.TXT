@@ -1,12 +1,7 @@
 ToDo:
-@ create-repo.sh shouldn't run w/o params at all!
-@ MD5 file per pkg
-@ Dash compliant
-X auto arch detection ~ dismissed
 * external TXT pkg desc
 * watch the proces somehow
 * modify installation menu(s) to support additional categories and added packages
-* tfn configs for things like httpd, web sites, etc.
 * all configs in pkgs must end with .new !
 * re-do httpd to enabled-sites or alike (like in Debian ... oh silicon lord!)
 * solve "deps" by txt file (GBS alike)
@@ -14,13 +9,13 @@ X auto arch detection ~ dismissed
 * move versioning to profiles, because it's quite retarded to change trilion
 files eg. due to kernel version change; and i think it also would be cool to
 be able to compile older versions eg. kernel 2.6.32.21 without re-editing
-everything *again* like a chimp. ;;; 
+everything *again* like a chimp. ;;;
 say: "k/kernel-huge;2.6.32.21;x64_64;" could do?
 * generated filelist output is not ordered :(
 * loop-AES for -v4l by appending -v4l to Kversion
 * locking in /tmp/.slackbuilder.lock or wherever
 * create an auto conf .$1 -> .$1.new + doinst.sh substr
-* one could write a crawler that would sweep repo and create filelist/checksums 
+* one could write a crawler that would sweep repo and create filelist/checksums
 by himself instead of tedious regeneration of these lists
 * a nice to have would be restart from failed PKG, not from the point #1
 * speed up re-generation, especially MD5-sums
